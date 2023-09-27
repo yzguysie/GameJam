@@ -1,0 +1,486 @@
+import pygame
+from pygame import gfxdraw
+from pygame import mixer
+
+pygame.init()
+
+mixer.init()
+import random
+import math
+import time
+import winsound
+
+
+screen_width, screen_height = 1280, 720
+fps = 120
+
+xscale = screen_width/1280
+yscale = screen_height/720
+
+
+window = pygame.display.set_mode([screen_width, screen_height])
+width = 1280
+height = 720
+pygame.display.set_caption("Game Jam Game")
+
+font = 'arial'
+font_width = int(width/100+1)
+
+dialogue_font = pygame.font.SysFont(font, font_width)
+
+white = (255, 255, 255)
+black = (0, 0, 0)
+gray = (128, 128, 128)
+light_gray = (192, 192, 192)
+dark_gray = (64, 64, 64)
+red = (255, 0, 0)
+blue = (0, 0, 255)
+green = (32, 196, 96)
+purple = (255, 0, 255)
+yellow = (255,255,0)
+
+BACKGROUND_COLOR = (dark_gray)
+clock = pygame.time.Clock()
+
+show_hitboxes = True
+
+
+
+
+class Player():
+    def __init__(self):
+        self.x = 0
+        self.xspeed = 0
+        self.yspeed = 0
+        self.normwidth = 35
+        self.normheight = 35
+        self.miniwidth = 25
+        self.miniheight = 25
+        self.width = 35
+        self.height = 35
+        self.y = height-self.height
+        self.color = green
+        self.jump_height = 20
+        self.mini_jump_height = 15
+        self.max_speed_x = 10
+        self.max_speed_y = 25
+        self.on_ground = False
+        self.holding_jump = False
+        self.mini = False
+
+    def die(self):
+        global gravity
+        self.x = 0
+        self.y = height-self.height
+        self.xspeed = 0
+        self.yspeed = 0
+        self.width = 35
+        self.height = 35
+        self.on_ground = False
+        self.holding_jump = False
+        gravity = abs(gravity)
+       
+    def draw(self):
+        
+        self.rect = (self.x*xscale, self.y*yscale, self.width*xscale, self.height*yscale)
+
+        pygame.gfxdraw.box(window, self.rect, self.color)
+
+        lowest = 50
+        step = 15/xscale
+        for i in range(int(int(100-lowest)/int(step))):
+            self.rect = ((self.x*xscale+i), (self.y*yscale+i), (self.width*xscale-i*2), (self.height*yscale-i*2))
+            pygame.gfxdraw.rectangle(window, self.rect, (self.color[0]*(lowest+(i*step))/100, self.color[1]*(lowest+(i*step))/100, self.color[2]*(lowest+(i*step))/100))
+
+    def onsurface(self):
+        if gravity >= 0:
+            if self.y >= height-(ground_height+self.height):
+                self.y = height-(ground_height+self.height)
+                return True
+        else:
+            if self.y <= 0:
+                self.y = 0
+                return True
+
+        for obstacle in obstacles:
+            if self.is_on(obstacle):
+                #self.y = obstacle.y-self.height
+                return True
+
+        return False
+
+    def do_collision(self):
+        for obstacle in obstacles:
+            if self.x + self.width > obstacle.x and self.x + self.width <= obstacle.x + self.xspeed*gamespeed:
+                if self.y+self.height > obstacle.y and self.y < obstacle.y+obstacle.height:
+                    self.x = obstacle.x-self.width
+                    self.xspeed = 0
+                   
+            if self.x < obstacle.x+obstacle.width and self.x-self.xspeed*gamespeed >= obstacle.x + obstacle.width:
+                if self.y+self.height > obstacle.y and self.y < obstacle.y+obstacle.height:
+                    self.x = obstacle.x+obstacle.width
+
+                    self.xspeed = 0
+
+           
+           
+            if self.x+self.width > obstacle.x and self.x < obstacle.x+obstacle.width:
+                if self.y+self.height > obstacle.y and self.y < obstacle.y+obstacle.height:
+                    if self.y+self.height < obstacle.y+self.height:
+                        self.y = obstacle.y-self.height
+                        self.yspeed = 0
+                       
+                    else:
+                        self.yspeed = 0
+                        self.y = obstacle.y+obstacle.height
+
+        for hazard in hazards:
+            if self.is_touching(hazard):
+                self.die()
+
+    def is_touching(self, obstacle):
+        if self.x+self.width-self.width/4 > obstacle.x and self.x+self.width/4 < obstacle.x+obstacle.width:
+            return self.y+self.height-self.height/4 >= obstacle.y and self.y+self.height/4 <= obstacle.y+obstacle.height
+
+        return False
+
+
+    def is_on(self, obstacle):            
+        if gravity >= 0:
+            if self.x+self.width > obstacle.x and self.x < obstacle.x+obstacle.width:
+                if self.y+self.height >= obstacle.y and self.y <= obstacle.y+obstacle.height:
+                    if self.y+self.height+self.yspeed <= obstacle.y+self.height:
+                        return True
+            return False
+        if self.x+self.width > obstacle.x and self.x < obstacle.x+obstacle.width:
+            if self.y <= obstacle.y+obstacle.height and self.y+self.height >= obstacle.y:
+                #if self.y+self.height <= obstacle.y+self.height:
+                return True
+        return False
+       
+           
+           
+       
+   
+    def tick(self):
+        self.apply_gravity(gravity)
+        if self.onsurface():
+            self.apply_friction(flat_friction, multiplicative_friction)
+        else:
+            self.apply_friction(flat_friction*air_friction_mult, multiplicative_friction*air_friction_mult)
+        self.get_instructions()
+        self.x += self.xspeed*gamespeed
+        self.y += self.yspeed*gamespeed
+        self.do_collision()
+       
+        if self.x < 0:
+            self.x = 0
+            self.xspeed = 0
+
+        if self.x > width-self.width:
+            self.x = width-self.width
+            self.xspeed = 0
+           
+        if self.y < 0:
+            self.y = 0
+            self.yspeed = 0
+
+        if self.y+self.height > height:
+            self.y = height-self.height
+           
+        if self.onsurface():
+            self.yspeed = 0
+
+       
+        self.do_collision()
+        self.draw()
+       
+    def apply_friction(self, flat_friction, multiplicative_friction):
+        if self.xspeed > flat_friction*gamespeed:
+            self.xspeed -= flat_friction*gamespeed
+            self.xspeed -= self.xspeed*multiplicative_friction*gamespeed
+        elif self.xspeed < -flat_friction*gamespeed:
+            self.xspeed += flat_friction*gamespeed
+            self.xspeed -= self.xspeed*multiplicative_friction*gamespeed
+
+        else:
+            self.xspeed = 0
+    def apply_gravity(self, gravity):
+        if self.mini:
+            self.yspeed += gravity*gamespeed*1.2
+        else:
+            self.yspeed += gravity*gamespeed
+        if self.yspeed > self.max_speed_y:
+            self.yspeed = self.max_speed_y
+
+    def get_instructions(self):
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+            self.xspeed += 1*gamespeed
+            if self.xspeed > self.max_speed_x:
+                self.xspeed = self.max_speed_x
+               
+        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
+            self.xspeed -= 1*gamespeed
+            if self.xspeed < -player.max_speed_x:
+                self.xspeed = -player.max_speed_x
+        if (keys[pygame.K_UP] or keys[pygame.K_SPACE] or pygame.mouse.get_pressed()[0]) and self.onsurface():
+            self.jump()
+
+
+    def jump(self):
+        #dislike_sfx = pygame.mixer.Sound("dislike.mp3")
+        #dislike_sfx.play()
+        if self.mini:
+            self.yspeed = -self.mini_jump_height*gravity
+        else:
+            self.yspeed = -self.jump_height*gravity
+            
+        if self.yspeed < -player.max_speed_y:
+            self.yspeed = -player.max_speed_y
+
+
+    def set_mini(self, mini):
+        if mini:
+            self.width = self.miniwidth
+            self.height = self.miniheight
+            self.mini = True
+        else:
+            self.width = self.normwidth
+            self.height = self.normheight
+            self.mini = False
+
+class Obstacle:
+    def __init__(self, x, y, width, height):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.color = light_gray
+        self.outline_color = gray
+
+    def draw(self):
+        self.rect = (self.x*xscale, self.y*yscale, self.width*xscale, self.height*yscale)
+        pygame.gfxdraw.box(window, self.rect, self.color)
+        pygame.gfxdraw.rectangle(window, self.rect, self.outline_color)
+
+    def tick(self):
+        self.draw()
+       
+class Hazard:
+    def __init__(self, x, y, width, height):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.color = red
+
+    def draw(self):
+        self.rect = (self.x*xscale, self.y*yscale, self.width*xscale, self.height*yscale)
+        pygame.gfxdraw.box(window, self.rect, self.color)
+
+    def tick(self):
+        self.draw()
+
+class Portal:
+    def __init__(self, x, y, width, height, type_):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.mode = type_
+        self.contacting = False
+        if self.mode == 0:
+            self.color = gray
+
+        elif self.mode == 1:
+            self.color = yellow
+   
+        elif self.mode == 2:
+            self.color = blue
+
+        elif self.mode == 3:
+            self.color = green
+
+        elif self.mode == 4:
+            self.color = purple
+
+        else:
+            self.color = white
+
+    def apply(self):
+        global gravity
+        if self.mode == 1:
+            if gravity > 0:
+                gravity = -gravity
+                if player.yspeed > player.max_speed_y/2:
+                    player.yspeed = player.max_speed_y/2
+        elif self.mode == 2:
+            if gravity < 0:
+                gravity = -gravity
+                if player.yspeed < -player.max_speed_y/2:
+                    player.yspeed = -player.max_speed_y/2
+
+
+        elif self.mode == 3:
+            player.mini = False
+            player.set_mini(player.mini)
+
+        elif self.mode == 4:
+            player.mini = True
+            player.set_mini(player.mini)
+
+    def tick(self):
+        if self.check_collision():
+            if not self.contacting:
+                self.contacting = True
+                self.apply()
+
+        else:
+            self.contacting = False
+        self.draw()
+
+    def check_collision(self):
+        if player.x+player.width > self.x and player.x < self.x+self.width:
+            if player.y+player.height > self.y and player.y < self.y+self.height:
+                return True
+        return False
+
+    def draw(self):
+        if show_hitboxes:
+            pygame.gfxdraw.rectangle(window, (round(self.x*xscale), round(self.y*yscale), round(self.width*xscale), round(self.height*yscale)), red)
+
+        lowest = .5
+        highest = 1
+        #color = (self.color[0]*lowest, self.color[1]*lowest, self.color[2]*lowest)
+        pygame.gfxdraw.aaellipse(window, round((self.x+self.width/2)*xscale), round((self.y+self.height/2)*yscale), round((self.width/2)*xscale), round((self.height/2)*yscale), self.color)
+        """
+        repititions = round(self.height/6)
+        divide = 3
+        for i in range(repititions):
+            color = (min(self.color[0]*(lowest+(highest-lowest)*(i+1/repititions)), 255), min(self.color[1]*lowest+(highest-lowest)*(i+1/repititions), 255), min(self.color[2]*lowest+(highest-lowest)*(i+1/repititions),255))
+            pygame.gfxdraw.ellipse(window, round(self.x+self.width/2+i/divide), round(self.y+self.height/2), round(self.width/2-i/divide*2), round(self.height/2-i/divide*2), color)
+
+        for i in range(repititions):
+            color = (self.color[0]*(lowest+(highest-lowest)*((repititions-(i+1))/repititions)), self.color[1]*(lowest+(highest-lowest)*((repititions-(i+1))/repititions)), self.color[2]*(lowest+(highest-lowest)*((repititions-(i+1))/repititions)))
+            pygame.gfxdraw.ellipse(window, round(self.x+self.width/2+(i+repititions)/divide), round(self.y+self.height/2), round(self.width/2-(i+repititions)/divide*2), round(self.height/2-(i+repititions)*divide/4), color)
+           
+        color = (self.color[0]*lowest, self.color[1]*lowest, self.color[2]*lowest)
+        pygame.gfxdraw.aaellipse(window, round(self.x+self.width/2), round(self.y+self.height/2), round(self.width/2), round(self.height/2), color)
+       
+   
+        """
+       
+       
+
+   
+
+   
+
+player = Player()
+
+obstacles = []
+hazards = []
+portals = []
+
+portals.append(Portal(570, height-height/10*6, 120, 30, 2))
+portals.append(Portal(520, height-height/10*2.5, 120, 30, 1))
+portals.append(Portal(100, height-height/10*2, 30, 100, 4))
+portals.append(Portal(350, height-height/10*3, 30, 100, 3))
+
+obstacles.append(Obstacle(100, height-height/10, 100, 20))
+obstacles.append(Obstacle(250, height-height/10*2, 100, 20))
+obstacles.append(Obstacle(400, height-height/10*3, 100, 20))
+
+obstacles.append(Obstacle(700, height-height/10*5, 100, 20))
+obstacles.append(Obstacle(850, height-height/10*6, 100, 20))
+obstacles.append(Obstacle(700, height-height/10*6, 100, 20))
+obstacles.append(Obstacle(550, height-height/10*6, 100, 20))
+obstacles.append(Obstacle(400, height-height/10*6, 100, 20))
+
+
+hazards.append(Hazard(250, height-20, width-250, 20))
+hazards.append(Hazard(0, 0, width, 20))
+
+
+numx = 0
+numy = 0
+for i in range(numy):
+    for j in range(numx):
+        obstacles.append(Obstacle(width-width/numx*(numx-j-.25), height-height/numy*(numy-i), width/numx/2, 25))
+
+
+gravity = .85
+gamespeed = 60/fps
+ground_height = 0
+
+flat_friction = .1
+multiplicative_friction = .02
+air_friction_mult = .333
+frames = 0
+playing = True
+last_time = time.time()-1000
+
+pygame.mixer.music.set_volume(10)
+#jump_sound = pygame.mixer.Sound('jump.mp3')
+#jump_sound.play()
+
+#ex = pygame.mixer.Sound('achievement_01.ogg')
+#ex.play()
+
+
+
+
+
+
+while playing:
+   
+    if frames % int(fps/2) == 0:
+        fps_ = int(1/((time.time()-last_time)/(fps/2))+.5)
+        last_time = time.time()
+       
+    window.fill(BACKGROUND_COLOR)
+   
+       
+   
+   
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            playing = False
+            break
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                playing = False
+                break
+           
+        if event.type == pygame.KEYDOWN:
+
+            if event.key == pygame.K_RETURN:
+                player.y -= 350*gravity
+            pass
+               
+           
+   
+                   
+    for obstacle in obstacles:
+        obstacle.tick()
+       
+    for hazard in hazards:
+        hazard.tick()
+
+    for portal in portals:
+        portal.tick()
+    player.tick()
+    dialogue = dialogue_font.render("FPS: " + str(fps_), True, white)
+    dialogue_rect = dialogue.get_rect()
+    window.blit(dialogue, dialogue_rect)
+   
+
+
+
+
+    pygame.display.flip()
+    clock.tick(fps)
+    frames += 1
+   
+pygame.quit()
