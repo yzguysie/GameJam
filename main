@@ -9,19 +9,36 @@ import random
 import math
 import time
 import winsound
+import ui
+import os
+#from win32gui import FindWindow, GetWindowRect
 
 
-screen_width, screen_height = 1280, 720
-fps = 120
+    
+from configparser import ConfigParser
 
-xscale = screen_width/1280
-yscale = screen_height/720
+config = ConfigParser()
+player_sprite = True
 
+screen_width, screen_height = 768, 432
 
-window = pygame.display.set_mode([screen_width, screen_height])
-width = 1280
-height = 720
+#MAKE "BUMP pads" that PUSH you like terracotta in minecraft (Like sideways jump pad or those thingies in edge)
+fps = 60
+width = 1600
+height = 900
+grid_width = round(width/32)
+grid_height = round(height/18)
+xscale = screen_width/width
+yscale = screen_height/height
+
+autosave = True
+
+window = pygame.display.set_mode([screen_width, screen_height], pygame.RESIZABLE)
+
 pygame.display.set_caption("Game Jam Game")
+
+#rezisable_mode =
+
 
 font = 'arial'
 font_width = int(width/100+1)
@@ -34,17 +51,40 @@ gray = (128, 128, 128)
 light_gray = (192, 192, 192)
 dark_gray = (64, 64, 64)
 red = (255, 0, 0)
-blue = (0, 0, 255)
-green = (32, 196, 96)
-purple = (255, 0, 255)
+blue = (85, 171, 255)
+bg_blue = (64, 84, 128)
+green = (85, 255, 171)
+purple = (255, 64, 255)
 yellow = (255,255,0)
 
-BACKGROUND_COLOR = (dark_gray)
+blue_black = (6, 8, 32)
+light_blue_black = (24, 32, 64)
+
+BACKGROUND_COLOR = bg_blue
 clock = pygame.time.Clock()
 
-show_hitboxes = True
+show_hitboxes = False
 
+autoscroll = False
+autoscroll_speed = 5
+autoscroll_offset = 0
+if not autoscroll:
+    autoscroll_speed = 0
 
+player_circle = False
+
+class Sprite():
+    def __init__(self, image, x, y, rotation):
+        self.x = x
+        self.y = y
+        self.ogimage = image
+        self.image = self.ogimage
+        self.rotation = rotation
+        self.target_rotation = rotation
+
+    def draw(self):
+        self.image = pygame.transform.rotate(self.ogimage, self.rotation)
+        window.blit(self.image, (self.x, self.y))
 
 
 class Player():
@@ -52,48 +92,94 @@ class Player():
         self.x = 0
         self.xspeed = 0
         self.yspeed = 0
-        self.normwidth = 35
-        self.normheight = 35
-        self.miniwidth = 25
-        self.miniheight = 25
-        self.width = 35
-        self.height = 35
+        self.normwidth = 50
+        self.normheight = 50
+        self.miniwidth = math.sqrt(1)/2.1*self.normwidth
+        self.miniheight = math.sqrt(1)/2.1*self.normheight
+        self.width = 50
+        self.height = 50
         self.y = height-self.height
         self.color = green
-        self.jump_height = 20
-        self.mini_jump_height = 15
-        self.max_speed_x = 10
-        self.max_speed_y = 25
+        self.jump_height = 24
+        self.mini_jump_height = math.sqrt(3)/2*self.jump_height
+        self.max_speed_x = 12
+        self.max_speed_y = 40
         self.on_ground = False
         self.holding_jump = False
         self.mini = False
+        self.gravity = gravity
+        self.acceleration = .85
+        self.fancy = True
+        self.rotation = 0
+        self.sprite = None
 
     def die(self):
-        global gravity
+        global player_random
+        #self.gravity = abs(self.gravity)
         self.x = 0
         self.y = height-self.height
         self.xspeed = 0
         self.yspeed = 0
-        self.width = 35
-        self.height = 35
+        self.width = self.normwidth
+        self.height = self.normheight
+        self.mini = False
         self.on_ground = False
         self.holding_jump = False
-        gravity = abs(gravity)
+        if player_random and False:
+            if self in players:
+                players.remove(self)
+            player = Player()
+            player.color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+            player.width = (random.randint(10, 50))
+            player.height = (random.randint(10, 50))
+            player.normwidth = player.width
+            player.normheight = player.height
+            player.miniwidth = player.width/math.sqrt(2)
+            player.miniheight = player.height/math.sqrt(2)
+            player.jump_height = random.randint(17, 30)
+            player.mini_jump_height = player.jump_height/1.2
+            player.max_speed_x = random.uniform(5, 20)
+            player.max_speed_y = random.uniform(10, 50)
+            player.acceleration = random.uniform(.5, 2)
+            players.append(player)
+        self.gravity = abs(self.gravity)
+        cube_width, cube_height = self.width*xscale, self.height*yscale
+        cube_image = pygame.transform.smoothscale(pygame.image.load("sebocube.png"), (cube_width, cube_height))
+        cube_rotation = 0
+        self.sprite = Sprite(cube_image, self.x*xscale, self.y*yscale, self.rotation)
        
     def draw(self):
+        if player_sprite:
+            self.sprite.x = self.x*xscale
+            self.sprite.y = self.y*yscale
+            self.sprite.width = self.width*xscale
+            self.sprite.height = self.height*yscale
+            self.sprite.draw()
+            return
         
+        if player_circle:
+            color = (self.color[0]*55/100, self.color[1]*55/100, self.color[2]*55/100)
+            pygame.gfxdraw.filled_ellipse(window, round((self.x+self.width/2)*xscale), round((self.y+self.height/2)*yscale), round((self.width/2)*xscale), round((self.height/2)*yscale), self.color)
+            pygame.gfxdraw.aaellipse(window, round((self.x+self.width/2)*xscale), round((self.y+self.height/2)*yscale), round((self.width/2)*xscale), round((self.height/2)*yscale), color)
+
+            return
         self.rect = (self.x*xscale, self.y*yscale, self.width*xscale, self.height*yscale)
-
         pygame.gfxdraw.box(window, self.rect, self.color)
+        
 
-        lowest = 50
-        step = 15/xscale
-        for i in range(int(int(100-lowest)/int(step))):
-            self.rect = ((self.x*xscale+i), (self.y*yscale+i), (self.width*xscale-i*2), (self.height*yscale-i*2))
-            pygame.gfxdraw.rectangle(window, self.rect, (self.color[0]*(lowest+(i*step))/100, self.color[1]*(lowest+(i*step))/100, self.color[2]*(lowest+(i*step))/100))
+        if self.fancy and not player_circle:
 
-    def onsurface(self):
-        if gravity >= 0:
+            lowest = 50
+            step = 15/xscale
+            for i in range(int(int(100-lowest)/int(step))):
+                self.rect = ((self.x*xscale+i), (self.y*yscale+i), (self.width*xscale-i*2), (self.height*yscale-i*2))
+                pygame.gfxdraw.rectangle(window, self.rect, (self.color[0]*(lowest+(i*step))/100, self.color[1]*(lowest+(i*step))/100, self.color[2]*(lowest+(i*step))/100))
+
+        
+        
+
+    def on_surface(self):
+        if self.gravity >= 0:
             if self.y >= height-(ground_height+self.height):
                 self.y = height-(ground_height+self.height)
                 return True
@@ -104,39 +190,119 @@ class Player():
 
         for obstacle in obstacles:
             if self.is_on(obstacle):
-                #self.y = obstacle.y-self.height
+                return True
+
+        return False
+
+    def touching_surface(self):
+        if self.on_surface():
+            return True
+        
+        if self.gravity >= 0:
+            if self.y >= height-(ground_height+self.height):
+                return True
+        else:
+            if self.y <= 0:
+                return True
+
+        if self.x+self.width >= width:
+            return True
+        
+        if self.x <= 0:
+            return True
+
+        for obstacle in obstacles:
+            if self.is_touching_no_generosity(obstacle):
                 return True
 
         return False
 
     def do_collision(self):
+        hitting = False
         for obstacle in obstacles:
-            if self.x + self.width > obstacle.x and self.x + self.width <= obstacle.x + self.xspeed*gamespeed:
-                if self.y+self.height > obstacle.y and self.y < obstacle.y+obstacle.height:
+            player_top = self.y
+            player_bottom = self.y+self.height
+            player_right = self.x+self.width
+            player_left = self.x
+            box_top = obstacle.y
+            box_bottom = obstacle.y+obstacle.height
+            box_right = obstacle.x+obstacle.width
+            box_left = obstacle.x
+            player_x_speed = self.xspeed*gamespeed
+            player_y_speed = self.yspeed*gamespeed
+            gravity_sign = (self.gravity/abs(self.gravity))
+            #If hitting left side stop
+            if player_right > box_left and player_right <= box_left + player_x_speed+1 + autoscroll_speed*gamespeed:
+                if player_bottom-self.height/4 > box_top+player_y_speed*gravity_sign and player_top+player_y_speed*gravity_sign < box_bottom-self.height/4: # -self.height/4 for leeway so if almost on top of block it gives it to you
                     self.x = obstacle.x-self.width
-                    self.xspeed = 0
-                   
-            if self.x < obstacle.x+obstacle.width and self.x-self.xspeed*gamespeed >= obstacle.x + obstacle.width:
-                if self.y+self.height > obstacle.y and self.y < obstacle.y+obstacle.height:
-                    self.x = obstacle.x+obstacle.width
+                    self.xspeed = -autoscroll_speed*gamespeed
 
+                    #print("HIT LEFT: " + str(frames))
+                    #print("PLayer y speed: " + str(player_y_speed))
+                    hitting = True
+
+            #if hitting right side stop
+            if player_left < box_right and player_left-player_x_speed >= box_right + autoscroll_speed*gamespeed:
+                if player_bottom-self.height/4 > box_top-(player_y_speed)*gravity_sign and player_top+(player_y_speed)*gravity_sign < box_bottom-self.height/4: #Thought this caused the Catching on right side of column but i dont know
+                #if player_bottom-self.height/4 > box_top-abs(player_y_speed)*gravity_sign and player_top+abs(player_y_speed)*gravity_sign < box_bottom-self.height/4: #Thought this is right but i dont think so
+                    self.x = box_right
                     self.xspeed = 0
+                    if autoscroll:
+                        self.xspeed = -autoscroll_speed*gamespeed
+
+                    #print("HIT RIGHT: " + str(frames))
+                    #print("PLayer y speed: " + str(player_y_speed))
+                    hitting = True
+
 
            
-           
-            if self.x+self.width > obstacle.x and self.x < obstacle.x+obstacle.width:
-                if self.y+self.height > obstacle.y and self.y < obstacle.y+obstacle.height:
-                    if self.y+self.height < obstacle.y+self.height:
-                        self.y = obstacle.y-self.height
-                        self.yspeed = 0
-                       
-                    else:
-                        self.yspeed = 0
-                        self.y = obstacle.y+obstacle.height
+            
+            if self.gravity >= 0:
+                #if hitting top of block
+                #if player_right-player_x_speed > box_left and player_left+player_x_speed < box_right: #Caused player hitting right side of column of blocks to get "Caught" idk if good tho
+                if player_right-abs(player_x_speed) > box_left and player_left+abs(player_x_speed) < box_right:# Idk if abs is good
+                    if player_bottom > box_top and player_top < box_bottom:
+                        hitting = True
+                        #if player_top < box_top: (Bad on low fps)
+                        if player_top < box_top+player_y_speed:
+                            
+                            self.y = obstacle.y-self.height
+                            self.yspeed = 0
+
+                        #if hitting bottom
+                        elif self.yspeed < 0:
+                            self.yspeed = 0
+                            self.y = obstacle.y+obstacle.height
+            else:
+               
+                #if hitting bottom of block
+                if self.x+self.width-self.xspeed*gamespeed > obstacle.x and self.x+self.xspeed*gamespeed < obstacle.x+obstacle.width:
+                    if player_bottom > box_top and player_top < box_bottom:
+                        hitting = True
+                        #if player_bottom > box_bottom: (Bad on low fps)
+                        if player_bottom-player_y_speed > box_bottom:
+                            self.y = box_bottom
+                            self.yspeed = 0
+                            
+
+                        #if hitting top   
+                        elif self.yspeed > 0:
+                            self.yspeed = 0
+                            self.y = obstacle.y-self.height
+
+                
 
         for hazard in hazards:
             if self.is_touching(hazard):
                 self.die()
+        return hitting
+
+
+    def is_touching_no_generosity(self, obstacle):
+        if self.x+self.width >= obstacle.x and self.x <= obstacle.x+obstacle.width:
+            return self.y+self.height >= obstacle.y and self.y <= obstacle.y+obstacle.height
+
+        return False
 
     def is_touching(self, obstacle):
         if self.x+self.width-self.width/4 > obstacle.x and self.x+self.width/4 < obstacle.x+obstacle.width:
@@ -145,35 +311,76 @@ class Player():
         return False
 
 
-    def is_on(self, obstacle):            
-        if gravity >= 0:
-            if self.x+self.width > obstacle.x and self.x < obstacle.x+obstacle.width:
-                if self.y+self.height >= obstacle.y and self.y <= obstacle.y+obstacle.height:
-                    if self.y+self.height+self.yspeed <= obstacle.y+self.height:
+    def is_on(self, obstacle):
+        player_top = self.y
+        player_bottom = self.y+self.height
+        player_right = self.x+self.width
+        player_left = self.x
+        box_top = obstacle.y
+        box_bottom = obstacle.y+obstacle.height
+        box_right = obstacle.x+obstacle.width
+        box_left = obstacle.x
+        player_x_speed = self.xspeed*gamespeed
+        player_y_speed = self.yspeed*gamespeed
+        gravity_sign = (self.gravity/abs(self.gravity))
+        rightside_up = self.gravity >= 0
+        
+        """
+        if self.gravity >= 0:
+            if player_right-player_x_speed > box_left and player_left-player_x_speed < box_right:
+                if player_bottom >= box_top and player_top+player_y_speed <= box_top:
                         return True
             return False
-        if self.x+self.width > obstacle.x and self.x < obstacle.x+obstacle.width:
-            if self.y <= obstacle.y+obstacle.height and self.y+self.height >= obstacle.y:
+        if self.x+self.width-self.xspeed*gamespeed > obstacle.x and self.x+self.xspeed*gamespeed < obstacle.x+obstacle.width:
+            if self.y <= obstacle.y+obstacle.height and self.y+self.height > obstacle.y:
                 #if self.y+self.height <= obstacle.y+self.height:
                 return True
         return False
-       
+        
+        
+        """
+        on_x = player_right-player_x_speed > box_left and player_left-player_x_speed < box_right
+        on_y = False
+
+        if on_x:
+
+            if rightside_up:
+                on_y = player_bottom >= box_top and player_top <= box_top
+
+
+            else:
+                on_y = player_top <= box_bottom and player_bottom >= box_bottom
+
+        return on_x and on_y
+        
+        
+            
            
+               
            
        
    
     def tick(self):
-        self.apply_gravity(gravity)
-        if self.onsurface():
+        global obstacles
+        self.apply_gravity()
+        if self.touching_surface():
             self.apply_friction(flat_friction, multiplicative_friction)
+            if self.sprite.rotation % 90 > 45:
+                self.sprite.target_rotation = self.sprite.rotation -self.sprite.rotation % 90 +90
+            else:
+                self.sprite.target_rotation = self.sprite.rotation -self.sprite.rotation % 90
         else:
             self.apply_friction(flat_friction*air_friction_mult, multiplicative_friction*air_friction_mult)
+            self.sprite.target_rotation -= 360/fps*self.xspeed/self.max_speed_x*(self.gravity/abs(self.gravity))
+        smoothness = 180/fps
+        self.sprite.rotation += (self.sprite.target_rotation-self.sprite.rotation)/max(1,smoothness)
         self.get_instructions()
         self.x += self.xspeed*gamespeed
         self.y += self.yspeed*gamespeed
         self.do_collision()
        
         if self.x < 0:
+
             self.x = 0
             self.xspeed = 0
 
@@ -188,11 +395,11 @@ class Player():
         if self.y+self.height > height:
             self.y = height-self.height
            
-        if self.onsurface():
+        if self.on_surface():
             self.yspeed = 0
 
        
-        self.do_collision()
+        #self.do_collision()
         self.draw()
        
     def apply_friction(self, flat_friction, multiplicative_friction):
@@ -205,26 +412,26 @@ class Player():
 
         else:
             self.xspeed = 0
-    def apply_gravity(self, gravity):
+    def apply_gravity(self):
         if self.mini:
-            self.yspeed += gravity*gamespeed*1.2
+            self.yspeed += self.gravity*gamespeed
         else:
-            self.yspeed += gravity*gamespeed
+            self.yspeed += self.gravity*gamespeed
         if self.yspeed > self.max_speed_y:
             self.yspeed = self.max_speed_y
 
     def get_instructions(self):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            self.xspeed += 1*gamespeed
+            self.xspeed += self.acceleration*gamespeed
             if self.xspeed > self.max_speed_x:
                 self.xspeed = self.max_speed_x
                
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-            self.xspeed -= 1*gamespeed
+            self.xspeed -= self.acceleration*gamespeed
             if self.xspeed < -player.max_speed_x:
                 self.xspeed = -player.max_speed_x
-        if (keys[pygame.K_UP] or keys[pygame.K_SPACE] or pygame.mouse.get_pressed()[0]) and self.onsurface():
+        if (keys[pygame.K_UP] or keys[pygame.K_SPACE] or (pygame.mouse.get_pressed()[0] and not editing and not mouse_over_anything())) and self.on_surface():
             self.jump()
 
 
@@ -232,10 +439,10 @@ class Player():
         #dislike_sfx = pygame.mixer.Sound("dislike.mp3")
         #dislike_sfx.play()
         if self.mini:
-            self.yspeed = -self.mini_jump_height*gravity
+            self.yspeed = -self.mini_jump_height*(abs(self.gravity)/self.gravity)
         else:
-            self.yspeed = -self.jump_height*gravity
-            
+            self.yspeed = -self.jump_height*(abs(self.gravity)/self.gravity)
+           
         if self.yspeed < -player.max_speed_y:
             self.yspeed = -player.max_speed_y
 
@@ -249,6 +456,10 @@ class Player():
             self.width = self.normwidth
             self.height = self.normheight
             self.mini = False
+        cube_width, cube_height = self.width*xscale, self.height*yscale
+        cube_image = pygame.transform.smoothscale(pygame.image.load("sebocube.png"), (cube_width, cube_height))
+        cube_rotation = 0
+        player.sprite = Sprite(cube_image, self.x*xscale, self.y*yscale, self.rotation)
 
 class Obstacle:
     def __init__(self, x, y, width, height):
@@ -258,13 +469,35 @@ class Obstacle:
         self.height = height
         self.color = light_gray
         self.outline_color = gray
+        self.rotation = 0
+
+    def __repr__(self):
+        f = "@"
+        return str(self.x) + f + str(self.y) + f + str(self.width) + f + str(self.height) + f + str(self.rotation) + f + str(self.color) + f + str(self.outline_color)
 
     def draw(self):
+        #print("x: " + str(self.x))
+        #print("xscale: " + str(xscale))
+        #print("y: " + str(self.y))
+        #print("yscale: " + str(yscale))
+        #print("width: " + str(self.width))
+        #print("height: " + str(self.height))
+        self.x = round(self.x)
+        self.y = round(self.y)
+        self.width = round(self.width)
+        self.height = round(self.height)
+        
         self.rect = (self.x*xscale, self.y*yscale, self.width*xscale, self.height*yscale)
         pygame.gfxdraw.box(window, self.rect, self.color)
         pygame.gfxdraw.rectangle(window, self.rect, self.outline_color)
 
     def tick(self):
+        if autoscroll:
+            self.x -= autoscroll_speed*gamespeed
+            if self.x < -self.width:
+                self.x += width
+
+            #self.y = self.x
         self.draw()
        
 class Hazard:
@@ -274,13 +507,35 @@ class Hazard:
         self.width = width
         self.height = height
         self.color = red
+        self.type = 1
+        self.rotation = 0
 
+    def __repr__(self):
+        f = "@"
+        return str(self.x) + f + str(self.y) + f + str(self.width) + f + str(self.height) + f + str(self.color) + f + str(self.type) + f + str(self.rotation)
+    
     def draw(self):
-        self.rect = (self.x*xscale, self.y*yscale, self.width*xscale, self.height*yscale)
-        pygame.gfxdraw.box(window, self.rect, self.color)
+        if self.type == 1:
+            if self.rotation < 180:
+                pygame.gfxdraw.filled_trigon(window, round(self.x*xscale), round((self.y+self.height-self.height*(self.rotation/180))*yscale), round((self.x+self.width/2+self.width/2*(self.rotation/180))*xscale), round((self.y+self.height*(self.rotation/180))*yscale), round((self.x+self.width-self.width*(self.rotation/180))*xscale), round((self.y+self.height)*yscale), self.color)
+            elif self.rotation == 180:
+                pygame.gfxdraw.filled_trigon(window, round(self.x*xscale), round(self.y*yscale), round((self.x+self.width/2)*xscale), round((self.y+self.height)*yscale), round((self.x+self.width)*xscale), round(self.y*yscale), self.color)
+            else:
+                pass
+            outline = .667
+            color = (self.color[0]*outline, self.color[1]*outline, self.color[2]*outline)
+            pygame.gfxdraw.aatrigon(window, round(self.x*xscale), round((self.y+self.height)*yscale), round((self.x+self.width/2)*xscale), round(self.y*yscale), round((self.x+self.width)*xscale), round((self.y+self.height)*yscale), color)
+        if self.type == 2:
+            self.rect = (self.x*xscale, self.y*yscale, self.width*xscale, self.height*yscale)
+            pygame.gfxdraw.box(window, self.rect, self.color)
 
     def tick(self):
+        if autoscroll:
+            self.x -= autoscroll_speed*gamespeed
+            if self.x < -self.width:
+                self.x += width
         self.draw()
+        
 
 class Portal:
     def __init__(self, x, y, width, height, type_):
@@ -305,19 +560,28 @@ class Portal:
         elif self.mode == 4:
             self.color = purple
 
+        elif self.mode == 5:
+            self.color = red
+
+        elif self.mode == 6:
+            self.color = gray
+        
         else:
             self.color = white
 
-    def apply(self):
-        global gravity
+    def __repr__(self):
+        f = "@"
+        return str(self.x) + f + str(self.y) + f + str(self.width) + f + str(self.height) + f + str(self.mode)
+
+    def apply(self, player):
         if self.mode == 1:
-            if gravity > 0:
-                gravity = -gravity
+            if player.gravity > 0:
+                player.gravity = -player.gravity
                 if player.yspeed > player.max_speed_y/2:
                     player.yspeed = player.max_speed_y/2
         elif self.mode == 2:
-            if gravity < 0:
-                gravity = -gravity
+            if player.gravity < 0:
+                player.gravity = -player.gravity
                 if player.yspeed < -player.max_speed_y/2:
                     player.yspeed = -player.max_speed_y/2
 
@@ -330,17 +594,29 @@ class Portal:
             player.mini = True
             player.set_mini(player.mini)
 
-    def tick(self):
-        if self.check_collision():
-            if not self.contacting:
-                self.contacting = True
-                self.apply()
+        elif self.mode == 5:
+            player.yspeed = -player.max_speed_y*(abs(player.gravity)/player.gravity)
 
-        else:
-            self.contacting = False
+        elif self.mode == 6:
+            global level_num
+            global load_new_level
+            level_num += 1
+            load_new_level = True
+            portals.remove(self)
+            
+    def tick(self):
+        for player in players:
+            if self.check_collision(player):
+                self.apply(player)
+
+        if autoscroll:
+            self.x -= autoscroll_speed*gamespeed
+            if self.x < -self.width:
+                self.x += width
         self.draw()
 
-    def check_collision(self):
+
+    def check_collision(self, player):
         if player.x+player.width > self.x and player.x < self.x+self.width:
             if player.y+player.height > self.y and player.y < self.y+self.height:
                 return True
@@ -349,6 +625,13 @@ class Portal:
     def draw(self):
         if show_hitboxes:
             pygame.gfxdraw.rectangle(window, (round(self.x*xscale), round(self.y*yscale), round(self.width*xscale), round(self.height*yscale)), red)
+
+
+
+        if self.mode == 5:
+            rect = pygame.Rect(round(self.x*xscale), round(self.y*yscale), round(self.width*xscale), round(self.height*yscale))
+            pygame.gfxdraw.box(window, rect, self.color)
+            return 
 
         lowest = .5
         highest = 1
@@ -370,37 +653,250 @@ class Portal:
        
    
         """
-       
+
+
+
+
+class Level():
+   
+    def __init__(self, data):
+        #print("Attempting to load: " + data)
+        try:
+            data = data.split("|")
+            player_data = data[0].split(" ")
+            obstacle_data = data[1].split("/")
+            for i in range(len(obstacle_data)):
+                obstacle_data[i] = obstacle_data[i].split("@")
+
+
+            hazard_data = data[2].split("/")
+            for i in range(len(hazard_data)):
+                hazard_data[i] = hazard_data[i].split("@")
+
+            portal_data = data[3].split("/")
+            for i in range(len(portal_data)):
+                portal_data[i] = portal_data[i].split("@")
+            
+               
+
+           
+            self.player = Player()
+            if len(player_data) == 2:
+                self.player.x = float(player_data[0])
+                self.player.y = float(player_data[1])
+            
+    
+            self.obstacles = []
+            if len(obstacle_data[0]) > 3:
+                for obstacle in obstacle_data:
+                    self.obstacles.append(Obstacle(float(obstacle[0]), float(obstacle[1]), float(obstacle[2]), float(obstacle[3])))
+
+            self.hazards = []
+            if len(hazard_data[0]) > 3:
+                for hazard in hazard_data:
+                    self.hazards.append(Hazard(float(hazard[0]), float(hazard[1]), float(hazard[2]), float(hazard[3])))
+
+            self.portals = []
+            if len(portal_data[0]) > 4:
+                for portal in portal_data:
+                    self.portals.append(Portal(float(portal[0]), float(portal[1]), float(portal[2]), float(portal[3]), int(portal[4])))
+
+            #print(str(data) + " loaded.")
+        
+        except:
+            print("Could not load level: level data corrupted")
+
        
 
+def set_level(level):
+    global player
+    global obstacles
+    global hazards
+    global portals
+    try:
+        player = level.player
+
+        obstacles = level.obstacles
+
+        hazards = level.hazards
+
+        portals = level.portals
+
+    except:
+        print("Level corrupted")
+
+def save_level():
+    #global player
+    #global obstacles
+    
+    data = ""
+    data += str(player.x) + " " + str(player.y)
+    data += "|"
+    strobstacles = []
+    for i in range(len(obstacles)):
+        strobstacles.append(repr(obstacles[i]))
+    data += "/".join(strobstacles)
+
+    data += "|"
+    strhazards = []
+    for i in range(len(hazards)):
+        strhazards.append(repr(hazards[i]))
+    data += "/".join(strhazards)
+
+    data += "|"
+
+    strportals = []
+    for i in range(len(portals)):
+        strportals.append(repr(portals[i]))
+    data += "/".join(strportals)
+    #print(data)
+    return data
+
+
+"""
+levels = []
+config.read('local_levels.ini')
+saved_levels_data = config.get(('slot 1'), ('level'))
+level = Level(saved_level_data)
+set_level(level)
+loading_level = False
+
+              elif loading_level:
+                    config.read('slot_1.ini')
+                    saved_level_data = config.get(('slot 1'), ('level'))
+                    level = Level(saved_level_data)
+                    set_level(level)
+                    loading_level = False
+"""
+
+level_num = 1
+player_count = 1
+player_random = False
+player_gradient = False
+alpha_player = False
+
+gravity = 1.75
+gamespeed = 60/fps
+ground_height = 0
+
+flat_friction = .1
+multiplicative_friction = .02
+air_friction_mult = .333
+if player_gradient:
+    flat_friction = 0
+    air_friction_mult = 1
+
+
+   
    
 
    
 
-player = Player()
+#player = Player()
 
+
+players = []
+
+
+for i in range(player_count):
+    player = Player()
+    if (player_random or player_gradient) and i % 2 == 1:
+        player.gravity = -player.gravity
+    if player_random:
+        player.gravity *= random.uniform(0, 2)
+        while player.gravity == 0:
+            player.gravity *= random.uniform(0, 2)
+        
+        player.x += i
+        player.color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        player.width = (random.randint(10, 50))
+        player.height = (random.randint(10, 50))
+        player.normwidth = player.width
+        player.normheight = player.height
+        player.miniwidth = player.width/math.sqrt(2)
+        player.miniheight = player.height/math.sqrt(2)
+        player.jump_height = random.randint(17, 30)
+        player.mini_jump_height = player.jump_height/1.2
+        player.max_speed_x = random.uniform(5, 20)
+        player.max_speed_y = random.uniform(10, 50)
+        player.acceleration = random.uniform(.5, 2)
+
+    elif player_gradient:
+        player.x = width*(i/player_count)-i/(player_count)*40+10
+        b = 255*i/(player_count)
+        
+        g = 255*(i+player_count/2)/player_count
+        
+            
+        r = 255*(i+player_count)/player_count
+        
+        if r > 255:
+            r = 560-r
+
+        if g > 255:
+            g = 560-g
+
+        if b > 255:
+            b = 560-b
+
+        if r > 255:
+            r = 255
+
+        if g > 255:
+            g = 255
+
+        if b > 255:
+            b = 255
+
+        r = max(r, 0)
+        g = max(g, 0)
+        b = max(b, 0)
+
+        
+
+        
+        player.color = (r, g, b)
+        player.width = i/(player_count)*40+10
+        player.height = player.width
+        player.normwidth = player.width
+        player.normheight = player.height
+        player.miniwidth = player.width/math.sqrt(2)
+        player.miniheight = player.height/math.sqrt(2)
+        player.jump_height = i/(player_count)*20+5
+        player.mini_jump_height = player.jump_height/1.2
+        player.mini = False
+        player.set_mini(player.mini)
+        player.fancy = True
+        player.max_speed_x = 500
+        player.acceleration = (i/player_count)*2+(1/player_count)
+    players.append(player)
+
+if alpha_player:
+    player = players[len(players)-1]
+    player.color = (255, 32, 48)
+    player.width = 55
+    player.height = 55
+    player.normwidth = player.width
+    player.normheight = player.height
+    player.miniwidth = player.width/math.sqrt(2)
+    player.miniheight = player.height/math.sqrt(2)
+    player.jump_height = 35
+    player.gravity = 1.35
+    player.max_speed_x = 25
+    player.max_speed_y = 60
+    player.acceleration = 2.25
+    print("Alpha player spawned")
+    
+for player in players:
+    cube_width, cube_height = player.width*xscale, player.height*yscale
+    cube_image = pygame.transform.smoothscale(pygame.image.load("sebocube.png"), (cube_width, cube_height))
+    cube_rotation = 0
+    player.sprite = Sprite(cube_image, player.x*xscale, player.y*yscale, player.rotation)
+    
 obstacles = []
 hazards = []
 portals = []
 
-portals.append(Portal(570, height-height/10*6, 120, 30, 2))
-portals.append(Portal(520, height-height/10*2.5, 120, 30, 1))
-portals.append(Portal(100, height-height/10*2, 30, 100, 4))
-portals.append(Portal(350, height-height/10*3, 30, 100, 3))
-
-obstacles.append(Obstacle(100, height-height/10, 100, 20))
-obstacles.append(Obstacle(250, height-height/10*2, 100, 20))
-obstacles.append(Obstacle(400, height-height/10*3, 100, 20))
-
-obstacles.append(Obstacle(700, height-height/10*5, 100, 20))
-obstacles.append(Obstacle(850, height-height/10*6, 100, 20))
-obstacles.append(Obstacle(700, height-height/10*6, 100, 20))
-obstacles.append(Obstacle(550, height-height/10*6, 100, 20))
-obstacles.append(Obstacle(400, height-height/10*6, 100, 20))
-
-
-hazards.append(Hazard(250, height-20, width-250, 20))
-hazards.append(Hazard(0, 0, width, 20))
 
 
 numx = 0
@@ -410,54 +906,504 @@ for i in range(numy):
         obstacles.append(Obstacle(width-width/numx*(numx-j-.25), height-height/numy*(numy-i), width/numx/2, 25))
 
 
-gravity = .85
-gamespeed = 60/fps
-ground_height = 0
 
-flat_friction = .1
-multiplicative_friction = .02
-air_friction_mult = .333
+
+
 frames = 0
 playing = True
 last_time = time.time()-1000
 
-pygame.mixer.music.set_volume(10)
-#jump_sound = pygame.mixer.Sound('jump.mp3')
-#jump_sound.play()
 
-#ex = pygame.mixer.Sound('achievement_01.ogg')
-#ex.play()
+editing = True
 
 
 
+def mouse_over_anything():
+    for button in buttons:
+        if button.mouse_over():
+            return True
+    for slider in sliders:
+        if slider.mouse_over():
+            return True
+        if slider.moving:
+            return True
+    return False
+
+buttons = []
+
+button_width = round(screen_width/20)
+button_height = round(screen_height/30)
 
 
+
+if editing:
+    save_button = ui.button(window, screen_width-button_width*2, 0, button_width, button_height, "save")
+    load_button = ui.button(window, screen_width-button_width, 0, button_width, button_height, "load")
+    reset_button = ui.button(window, screen_width-button_width*2, button_height, button_width, button_height, "reset")
+    delete_button = ui.button(window, 0, (button_height+5), button_width, button_height, "delete")
+    block_button = ui.button(window, (button_width+5)*0, (button_height+5)*2, button_width, button_height, "block")
+    slab_button = ui.button(window, (button_width+5)*1, (button_height+5)*2, button_width, button_height, "slab")
+    mini_block_button = ui.button(window, (button_width+5)*2, (button_height+5)*2, button_width, button_height, "mini block")
+    spike_button = ui.button(window, (button_width+5)*3, (button_height+5)*2, button_width, button_height, "spike")
+    yellow_portal_button = ui.button(window, 0, (button_height+5)*3, button_width*2, button_height, "upside down portal")
+    blue_portal_button = ui.button(window, (button_width+5)*2, (button_height+5)*3, button_width*2, button_height, "rightside up portal")
+    mini_portal_button = ui.button(window, (button_width+5)*0, (button_height+5)*4, button_width, button_height, "Normal portal")
+    normal_portal_button = ui.button(window, (button_width+5)*1, (button_height+5)*4, button_width, button_height, "Mini portal")
+    end_portal_button = ui.button(window, (button_width+5)*2, (button_height+5)*4, button_width, button_height, "End portal")
+    jump_pad_button = ui.button(window, (button_width+5)*3, (button_height+5)*4, button_width, button_height, "Jump pad")
+
+    slot_1_button = ui.button(window, screen_width-button_width*2, button_height*2, button_width, button_height, "Slot 1")
+    slot_2_button = ui.button(window, screen_width-button_width, button_height*2, button_width, button_height, "Slot 2")
+    slot_3_button = ui.button(window, screen_width-button_width*2, button_height*3, button_width, button_height, "Slot 3")
+    slot_4_button = ui.button(window, screen_width-button_width, button_height*3, button_width, button_height, "Slot 4")
+    slot_5_button = ui.button(window, screen_width-button_width*2, button_height*4, button_width, button_height, "Slot 5")
+    slot_6_button = ui.button(window, screen_width-button_width, button_height*4, button_width, button_height, "Slot 6")
+    slot_7_button = ui.button(window, screen_width-button_width*2, button_height*5, button_width, button_height, "Slot 7")
+    slot_8_button = ui.button(window, screen_width-button_width, button_height*5, button_width, button_height, "Slot 8")
+    slot_9_button = ui.button(window, screen_width-button_width*2, button_height*6, button_width, button_height, "Slot 9")
+    slot_10_button = ui.button(window, screen_width-button_width, button_height*6, button_width, button_height, "slot 10")
+
+    recover_button = ui.button(window, screen_width-button_width, button_height, button_width, button_height, "Recover")
+
+    buttons.append(save_button)
+    buttons.append(load_button)
+    buttons.append(reset_button)
+    buttons.append(slot_1_button)
+    buttons.append(slot_2_button)
+    buttons.append(slot_3_button)
+    buttons.append(slot_4_button)
+    buttons.append(slot_5_button)
+    buttons.append(slot_5_button)
+    buttons.append(slot_6_button)
+    buttons.append(slot_7_button)
+    buttons.append(slot_8_button)
+    buttons.append(slot_9_button)
+    buttons.append(slot_10_button)
+    buttons.append(recover_button)
+    buttons.append(delete_button)
+    buttons.append(block_button)
+    buttons.append(mini_block_button)
+    buttons.append(spike_button)
+    buttons.append(yellow_portal_button)
+    buttons.append(blue_portal_button)
+    buttons.append(mini_portal_button)
+    buttons.append(normal_portal_button)
+    buttons.append(end_portal_button)
+    buttons.append(slab_button)
+    buttons.append(jump_pad_button)
+
+
+sliders = []
+
+#saved_level_data = save_level()
+#level = Level(saved_level_data)
+#set_level(level)
+
+def get_grid_pos(pos):
+    x, y = pos
+    global grid_width
+    global grid_height
+    return x - x%grid_width, y - y%grid_height
+    #y = y - y%grid_height
+    #return x, y
+
+def get_special_grid_pos(pos, sp_width, sp_height):
+    x, y = pos
+    return x - x%sp_width, y - y%sp_height
+        
+
+DELETE = 0
+BLOCK = 1
+SPIKE = 2
+YELLOW_PORTAL = 3
+BLUE_PORTAL = 4
+MINI_PORTAL = 5
+NORMAL_PORTAL = 6
+SLAB = 7
+MINI_BLOCK = 8
+END_PORTAL = 9
+JUMP_PAD = 10
+
+
+loading_level = False
+saving_level = False
+
+selected = BLOCK
+
+def get_mouse_pos():
+    global xscale
+    global yscale
+
+    x, y = pygame.mouse.get_pos()
+    return x/xscale, y/yscale
+
+
+def make_new_object(id_, pos):
+    x, y = pos
+    if id_ == DELETE:
+        for obstacle in obstacles:
+            if x > obstacle.x and x < obstacle.x+obstacle.width:
+                if y > obstacle.y and y < obstacle.y+obstacle.height:
+                    obstacles.remove(obstacle)
+                    break
+
+        
+        for hazard in hazards:
+            if x > hazard.x and x < hazard.x+hazard.width:
+                if y > hazard.y and y < hazard.y+hazard.height:
+                    hazards.remove(hazard)
+                    break
+
+        for portal in portals:
+            if x > portal.x and x < portal.x+portal.width:
+                if y > portal.y and y < portal.y+portal.height:
+                    portals.remove(portal)
+                    break
+
+    if id_ == BLOCK:
+        x, y = get_grid_pos(pos)
+        obstacles.append(Obstacle(x ,y, grid_width, grid_height))
+
+    if id_ == SPIKE:
+        x, y = get_grid_pos(pos)
+
+        hazards.append(Hazard(x, y, grid_width, grid_height))
+
+    if id_ == YELLOW_PORTAL:
+        x, y = get_grid_pos(pos)
+
+        portals.append(Portal(x, y, grid_width/2, grid_height*2, 1))
+
+    if id_ == BLUE_PORTAL:
+        x, y = get_grid_pos(pos)
+
+        portals.append(Portal(x, y, grid_width/2, grid_height*2, 2))
+
+    if id_ == MINI_PORTAL:
+        x, y = get_grid_pos(pos)
+
+        portals.append(Portal(x, y, grid_width/2, grid_height*2, 3))
+
+    if id_ == NORMAL_PORTAL:
+        x, y = get_grid_pos(pos)
+
+        portals.append(Portal(x, y, grid_width/2, grid_height*2, 4))
+
+    if id_ == SLAB:
+        x, y = get_special_grid_pos(pos, grid_width, grid_height/2)
+        obstacles.append(Obstacle(x ,y, grid_width, grid_height/2))
+
+    if id_ == MINI_BLOCK:
+        x, y = get_special_grid_pos(pos, grid_width/2, grid_height/2)
+        obstacles.append(Obstacle(x ,y, grid_width/2, grid_height/2))
+
+    if id_ == JUMP_PAD:
+        x, y = get_special_grid_pos(pos, grid_width, grid_height/2)
+    
+        portals.append(Portal(x, y, grid_width, grid_height/2, 5))
+
+    if id_ == END_PORTAL:
+        x, y = get_grid_pos(pos)
+
+        portals.append(Portal(x, y, grid_width/2, grid_height*2, 6))
+        
+
+
+
+def load_level(level_num):
+    config.read('slot_'+str(level_num)+'.ini')
+    saved_level_data = config.get(('slot '+str(level_num)), ('level'))
+    level = Level(saved_level_data)
+    set_level(level)
+    for player in players:
+        player.die()
+
+def save_level_good(level_num):
+    saved_level_data = save_level()
+    config['slot '+str(level_num)] = {}
+    config['slot '+str(level_num)]['level'] = saved_level_data
+    with open('slot_'+str(level_num)+'.ini', 'w') as configfile:
+        config.write(configfile)
+
+
+
+
+
+def reload_buttons():
+    global players
+    global buttons
+    
+    global save_button
+    global load_button
+    global reset_button
+    global delete_button
+    global block_button
+    global slab_button
+    global mini_block_button
+    global spike_button
+    
+    global yellow_portal_button
+    global blue_portal_button
+    global mini_portal_button
+    global normal_portal_button
+    global jump_pad_button
+    global end_portal_button
+    global slot_1_button
+    global slot_2_button
+    global slot_3_button
+    global slot_4_button
+    global slot_5_button
+    global slot_6_button
+    global slot_7_button
+    global slot_8_button
+    global slot_9_button
+    global slot_10_button
+    global recover_button
+
+
+    global menu
+    global menu_buttons
+    global play_button
+    global options_button
+    global quit_button
+
+    
+    buttons = []
+    button_width = round(screen_width/20)
+    button_height = round(screen_height/30)
+    if menu:
+        menu_buttons = []
+
+        play_button = ui.button(window, screen_width/2-menu_button_width/2, screen_height/2-menu_button_height*3/2, menu_button_width, menu_button_height, "PLAY")
+        options_button = ui.button(window, screen_width/2-menu_button_width/2, screen_height/2-menu_button_height/2, menu_button_width, menu_button_height, "OPTIONS")
+        quit_button = ui.button(window, screen_width/2-menu_button_width/2, screen_height/2-menu_button_height/-2, menu_button_width, menu_button_height, "QUIT")
+
+        menu_buttons.append(play_button)
+        menu_buttons.append(options_button)
+        menu_buttons.append(quit_button)
+    if editing:
+        save_button = ui.button(window, screen_width-button_width*2, 0, button_width, button_height, "save")
+        load_button = ui.button(window, screen_width-button_width, 0, button_width, button_height, "load")
+        reset_button = ui.button(window, screen_width-button_width*2, button_height, button_width, button_height, "reset")
+        delete_button = ui.button(window, 0, (button_height+5), button_width, button_height, "delete")
+        block_button = ui.button(window, (button_width+5)*0, (button_height+5)*2, button_width, button_height, "block")
+        slab_button = ui.button(window, (button_width+5)*1, (button_height+5)*2, button_width, button_height, "slab")
+        mini_block_button = ui.button(window, (button_width+5)*2, (button_height+5)*2, button_width, button_height, "mini block")
+        spike_button = ui.button(window, (button_width+5)*3, (button_height+5)*2, button_width, button_height, "spike")
+        yellow_portal_button = ui.button(window, 0, (button_height+5)*3, button_width*2, button_height, "upside down portal")
+        blue_portal_button = ui.button(window, (button_width+5)*2, (button_height+5)*3, button_width*2, button_height, "rightside up portal")
+        mini_portal_button = ui.button(window, (button_width+5)*0, (button_height+5)*4, button_width, button_height, "Normal portal")
+        normal_portal_button = ui.button(window, (button_width+5)*1, (button_height+5)*4, button_width, button_height, "Mini portal")
+        end_portal_button = ui.button(window, (button_width+5)*2, (button_height+5)*4, button_width, button_height, "End portal")
+        jump_pad_button = ui.button(window, (button_width+5)*3, (button_height+5)*4, button_width, button_height, "Jump pad")
+
+        slot_1_button = ui.button(window, screen_width-button_width*2, button_height*2, button_width, button_height, "Slot 1")
+        slot_2_button = ui.button(window, screen_width-button_width, button_height*2, button_width, button_height, "Slot 2")
+        slot_3_button = ui.button(window, screen_width-button_width*2, button_height*3, button_width, button_height, "Slot 3")
+        slot_4_button = ui.button(window, screen_width-button_width, button_height*3, button_width, button_height, "Slot 4")
+        slot_5_button = ui.button(window, screen_width-button_width*2, button_height*4, button_width, button_height, "Slot 5")
+        slot_6_button = ui.button(window, screen_width-button_width, button_height*4, button_width, button_height, "Slot 6")
+        slot_7_button = ui.button(window, screen_width-button_width*2, button_height*5, button_width, button_height, "Slot 7")
+        slot_8_button = ui.button(window, screen_width-button_width, button_height*5, button_width, button_height, "Slot 8")
+        slot_9_button = ui.button(window, screen_width-button_width*2, button_height*6, button_width, button_height, "Slot 9")
+        slot_10_button = ui.button(window, screen_width-button_width, button_height*6, button_width, button_height, "slot 10")
+
+        recover_button = ui.button(window, screen_width-button_width, button_height, button_width, button_height, "Recover")
+
+        buttons.append(save_button)
+        buttons.append(load_button)
+        buttons.append(reset_button)
+        buttons.append(slot_1_button)
+        buttons.append(slot_2_button)
+        buttons.append(slot_3_button)
+        buttons.append(slot_4_button)
+        buttons.append(slot_5_button)
+        buttons.append(slot_5_button)
+        buttons.append(slot_6_button)
+        buttons.append(slot_7_button)
+        buttons.append(slot_8_button)
+        buttons.append(slot_9_button)
+        buttons.append(slot_10_button)
+        buttons.append(recover_button)
+        buttons.append(delete_button)
+        buttons.append(block_button)
+        buttons.append(mini_block_button)
+        buttons.append(spike_button)
+        buttons.append(yellow_portal_button)
+        buttons.append(blue_portal_button)
+        buttons.append(mini_portal_button)
+        buttons.append(normal_portal_button)
+        buttons.append(end_portal_button)
+        buttons.append(slab_button)
+        buttons.append(jump_pad_button)
+    for player in players:
+        cube_width, cube_height = player.width*xscale, player.height*yscale
+        cube_image = pygame.transform.smoothscale(pygame.image.load("sebocube.png"), (cube_width, cube_height))
+        cube_rotation = 0
+        player.sprite = Sprite(cube_image, player.x*xscale, player.y*yscale, player.rotation)
+
+
+
+
+menu_button_width = round(screen_width/5)
+
+menu_button_height = round(screen_height/5)
+
+menu_buttons = []
+
+play_button = ui.button(window, screen_width/2-menu_button_width/2, screen_height/2-menu_button_height*3/2, menu_button_width, menu_button_height, "PLAY")
+options_button = ui.button(window, screen_width/2-menu_button_width/2, screen_height/2-menu_button_height/2, menu_button_width, menu_button_height, "OPTIONS")
+quit_button = ui.button(window, screen_width/2-menu_button_width/2, screen_height/2-menu_button_height/-2, menu_button_width, menu_button_height, "QUIT")
+
+menu_buttons.append(play_button)
+menu_buttons.append(options_button)
+menu_buttons.append(quit_button)
+
+menu = True
+def main_menu():
+    global menu
+    global playing
+    window.fill(BACKGROUND_COLOR)
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            menu = False
+            playing = False
+            break
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                menu = False
+                playing = False
+                break
+            
+    for button in menu_buttons:
+        button.draw()
+        if button.get_clicked():
+            if button == play_button:
+                playing = True
+                menu = False
+                
+            elif button == options_button:
+                pass
+
+
+            elif button == quit_button:
+                menu = False
+                playing = False
+                break
+
+    pygame.display.flip()
+    clock.tick(fps)
+load_level(level_num)
+load_new_level = False
 
 while playing:
-   
+    if screen_width != pygame.display.get_surface().get_width() or screen_height != pygame.display.get_surface().get_height():
+        
+        screen_width = pygame.display.get_surface().get_width()
+        screen_height = pygame.display.get_surface().get_height()
+        xscale = screen_width/width
+        yscale = screen_height/height
+        reload_buttons()
+        
+    if menu:
+        main_menu()
+        continue
+
+        
+
+
     if frames % int(fps/2) == 0:
         fps_ = int(1/((time.time()-last_time)/(fps/2))+.5)
         last_time = time.time()
        
     window.fill(BACKGROUND_COLOR)
-   
-       
+
+    if load_new_level:
+        load_level(level_num)
+        load_new_level = False
    
    
     for event in pygame.event.get():
+        #global saving_level
         if event.type == pygame.QUIT:
             playing = False
             break
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
-                playing = False
+                menu = True
+                #playing = False
                 break
            
-        if event.type == pygame.KEYDOWN:
 
-            if event.key == pygame.K_RETURN:
+            elif event.key == pygame.K_RETURN:
                 player.y -= 350*gravity
-            pass
+                saved_level_data = save_level()
+                level = Level(saved_level_data)
+                set_level(level)
+
+            if editing:
+                if event.key == pygame.K_s:
+                    saving_level = True
+            
+                elif event.key == pygame.K_l:
+                    loading_level = True
+                    
+
+                elif event.key == pygame.K_c:
+                    player_circle = not player_circle
+                    
+                    
+                elif event.key == pygame.K_0:
+                    make_new_object(DELETE, get_mouse_pos())
+
+                elif event.key == pygame.K_1:
+                    make_new_object(BLOCK, get_mouse_pos())                
+
+                elif event.key == pygame.K_2:
+                    make_new_object(SPIKE, get_mouse_pos())
+
+                elif event.key == pygame.K_3:
+                    make_new_object(BLUE_PORTAL, get_mouse_pos())
+
+                elif event.key == pygame.K_4:
+                    make_new_object(YELLOW_PORTAL, get_mouse_pos())
+
+                elif event.key == pygame.K_5:
+                    make_new_object(NORMAL_PORTAL, get_mouse_pos())
+
+                elif event.key == pygame.K_6:
+                    make_new_object(MINI_PORTAL, get_mouse_pos())
+
+                elif event.key == pygame.K_7:
+                    make_new_object(SLAB, get_mouse_pos())
+
+                elif event.key == pygame.K_8:
+                    make_new_object(MINI_BLOCK, get_mouse_pos())
+
+                elif event.key == pygame.K_9:
+                    make_new_object(END_PORTAL, get_mouse_pos())
+                    
+                elif event.key == pygame.K_r:
+                    x,y = get_mouse_pos()
+                    for hazard in hazards:
+                        if x > hazard.x and x < hazard.x+hazard.width:
+                            if y > hazard.y and y < hazard.y+hazard.height:
+                                hazard.rotation += 90
+                                if hazard.rotation >= 360:
+                                    hazard.rotation = 0
+                                break
+                    
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if not mouse_over_anything() and editing:
+                make_new_object(selected, get_mouse_pos())
+                    
+
+                
+                
+                
+
+           
                
            
    
@@ -470,17 +1416,185 @@ while playing:
 
     for portal in portals:
         portal.tick()
-    player.tick()
+
+    for player in players:  
+        player.tick()
+
+    for button in buttons:
+        #global saving_level
+        #global loading_level
+        button.draw()
+        if button.get_clicked():
+            if button == save_button:
+                saving_level = True
+                #saved_level_data = save_level()
+                #config['local levels'] = {}
+                #config['local levels']['level'] = saved_level_data
+                #with open('local_levels.ini', 'w') as configfile:
+                #    config.write(configfile)
+                #print("Saved level")
+                loading_level = False
+                
+            elif button == load_button:
+                loading_level = True
+                #config.read('local_levels.ini')
+                #saved_level_data = config.get(('local levels'), ('level'))
+                #level = Level(saved_level_data)
+                #set_level(level)
+                saving_level = False
+
+            elif button == reset_button:
+                level = Level("|||")
+                set_level(level)
+
+
+            elif button == delete_button:
+                selected = DELETE
+                
+            elif button == block_button:
+                selected = BLOCK
+
+            elif button == slab_button:
+                selected = SLAB
+
+            elif button == mini_block_button:
+                selected = MINI_BLOCK
+            
+            elif button == spike_button:
+                selected = SPIKE
+
+            elif button == yellow_portal_button:
+                selected = YELLOW_PORTAL
+
+            elif button == blue_portal_button:
+                selected = BLUE_PORTAL
+
+            elif button == mini_portal_button:
+                selected = MINI_PORTAL
+                
+            elif button == normal_portal_button:
+                selected = NORMAL_PORTAL
+                
+            elif button == end_portal_button:
+                selected = END_PORTAL
+
+            elif button == jump_pad_button:
+                selected = JUMP_PAD
+
+                
+
+            elif button == slot_1_button:
+                if saving_level:
+                    save_level_good(1)
+                    saving_level = False
+                elif loading_level:
+                    load_level(1)
+                    loading_level = False
+
+
+            elif button == slot_2_button:
+                if saving_level:
+                    save_level_good(2)
+                    saving_level = False
+                elif loading_level:
+                    load_level(2)
+                    loading_level = False
+
+
+            elif button == slot_3_button:
+                if saving_level:
+                    save_level_good(3)
+                    saving_level = False
+                elif loading_level:
+                    load_level(3)
+                    loading_level = False
+
+
+            elif button == slot_4_button:
+                if saving_level:
+                    save_level_good(4)
+                    saving_level = False
+                elif loading_level:
+                    load_level(4)
+                    loading_level = False
+
+            elif button == slot_5_button:
+                if saving_level:
+                    save_level_good(5)
+                    saving_level = False
+                elif loading_level:
+                    load_level(5)
+                    loading_level = False
+
+            elif button == slot_6_button:
+                if saving_level:
+                    save_level_good(6)
+                    saving_level = False
+                elif loading_level:
+                    load_level(6)
+                    loading_level = False
+
+            elif button == slot_7_button:
+                if saving_level:
+                    save_level_good(7)
+                    saving_level = False
+                elif loading_level:
+                    load_level(7)
+                    loading_level = False
+
+            elif button == slot_8_button:
+                if saving_level:
+                    save_level_good(8)
+                    saving_level = False
+                elif loading_level:
+                    load_level(8)
+                    loading_level = False
+
+            elif button == slot_9_button:
+                if saving_level:
+                    save_level_good(9)
+                    saving_level = False
+                elif loading_level:
+                    load_level(9)
+                    loading_level = False
+
+            elif button == slot_10_button:
+                if saving_level:
+                    save_level_good(10)
+                    saving_level = False
+                elif loading_level:
+                    load_level(10)
+                    loading_level = False
+
+            elif button == recover_button:
+                config.read('autosave.ini')
+                saved_level_data = config.get(('autosave'), ('level'))
+                level = Level(saved_level_data)
+                set_level(level)
+                
+    
     dialogue = dialogue_font.render("FPS: " + str(fps_), True, white)
     dialogue_rect = dialogue.get_rect()
     window.blit(dialogue, dialogue_rect)
    
 
-
+    if (frames+1) % (fps*30) == 0:
+        saved_level_data = save_level()
+        config['autosave'] = {}
+        config['autosave']['level'] = saved_level_data
+        with open('autosave.ini', 'w') as configfile:
+            config.write(configfile)
+        print("Auto Saved level")
+        print(frames+1)
 
 
     pygame.display.flip()
     clock.tick(fps)
     frames += 1
-   
+saved_level_data = save_level()
+config['autosave'] = {}
+config['autosave']['level'] = saved_level_data
+with open('autosave.ini', 'w') as configfile:
+    config.write(configfile)
+print("Saved level")
 pygame.quit()
