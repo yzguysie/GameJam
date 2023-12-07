@@ -19,6 +19,9 @@ from configparser import ConfigParser
 
 config = ConfigParser()
 player_sprite = True
+obstacle_sprite = True
+hazard_sprite = True
+portal_sprite = False
 
 screen_width, screen_height = 768, 432
 
@@ -78,9 +81,10 @@ class Sprite():
         self.x = x
         self.y = y
         self.ogimage = image
-        self.image = self.ogimage
         self.rotation = rotation
+        self.last_rotation = rotation
         self.target_rotation = rotation
+        self.image = pygame.transform.rotate(self.ogimage, self.rotation)
 
     def draw(self):
         self.image = pygame.transform.rotate(self.ogimage, self.rotation)
@@ -100,10 +104,10 @@ class Player():
         self.height = 50
         self.y = height-self.height
         self.color = green
-        self.jump_height = 24
+        self.jump_height = 19
         self.mini_jump_height = math.sqrt(3)/2*self.jump_height
-        self.max_speed_x = 12
-        self.max_speed_y = 40
+        self.max_speed_x = 10
+        self.max_speed_y = 25
         self.on_ground = False
         self.holding_jump = False
         self.mini = False
@@ -470,12 +474,17 @@ class Obstacle:
         self.color = light_gray
         self.outline_color = gray
         self.rotation = 0
+        self.costume = 0
 
     def __repr__(self):
         f = "@"
-        return str(self.x) + f + str(self.y) + f + str(self.width) + f + str(self.height) + f + str(self.rotation) + f + str(self.color) + f + str(self.outline_color)
+        return str(self.x) + f + str(self.y) + f + str(self.width) + f + str(self.height) + f + str(self.rotation) + f + str(self.costume) + f + str(self.color) + f + str(self.outline_color) 
 
     def draw(self):
+        if obstacle_sprite:
+            update_sprite(self)
+            self.sprite.draw()
+            return
         #print("x: " + str(self.x))
         #print("xscale: " + str(xscale))
         #print("y: " + str(self.y))
@@ -512,19 +521,24 @@ class Hazard:
 
     def __repr__(self):
         f = "@"
-        return str(self.x) + f + str(self.y) + f + str(self.width) + f + str(self.height) + f + str(self.color) + f + str(self.type) + f + str(self.rotation)
+        return str(self.x) + f + str(self.y) + f + str(self.width) + f + str(self.height) + f + str(self.rotation) + f + str(self.type) + f + str(self.color)
     
     def draw(self):
+        if hazard_sprite:
+            update_sprite(self)
+            self.sprite.draw()
+            return
         if self.type == 1:
+            outline = .667
+            color = (self.color[0]*outline, self.color[1]*outline, self.color[2]*outline)
             if self.rotation < 180:
                 pygame.gfxdraw.filled_trigon(window, round(self.x*xscale), round((self.y+self.height-self.height*(self.rotation/180))*yscale), round((self.x+self.width/2+self.width/2*(self.rotation/180))*xscale), round((self.y+self.height*(self.rotation/180))*yscale), round((self.x+self.width-self.width*(self.rotation/180))*xscale), round((self.y+self.height)*yscale), self.color)
             elif self.rotation == 180:
                 pygame.gfxdraw.filled_trigon(window, round(self.x*xscale), round(self.y*yscale), round((self.x+self.width/2)*xscale), round((self.y+self.height)*yscale), round((self.x+self.width)*xscale), round(self.y*yscale), self.color)
             else:
                 pass
-            outline = .667
-            color = (self.color[0]*outline, self.color[1]*outline, self.color[2]*outline)
-            pygame.gfxdraw.aatrigon(window, round(self.x*xscale), round((self.y+self.height)*yscale), round((self.x+self.width/2)*xscale), round(self.y*yscale), round((self.x+self.width)*xscale), round((self.y+self.height)*yscale), color)
+            
+            
         if self.type == 2:
             self.rect = (self.x*xscale, self.y*yscale, self.width*xscale, self.height*yscale)
             pygame.gfxdraw.box(window, self.rect, self.color)
@@ -545,6 +559,7 @@ class Portal:
         self.height = height
         self.mode = type_
         self.contacting = False
+        self.rotation = 0
         if self.mode == 0:
             self.color = gray
 
@@ -571,7 +586,7 @@ class Portal:
 
     def __repr__(self):
         f = "@"
-        return str(self.x) + f + str(self.y) + f + str(self.width) + f + str(self.height) + f + str(self.mode)
+        return str(self.x) + f + str(self.y) + f + str(self.width) + f + str(self.height) + f + str(self.mode) + f + str(self.rotation)
 
     def apply(self, player):
         if self.mode == 1:
@@ -687,19 +702,26 @@ class Level():
             
     
             self.obstacles = []
-            if len(obstacle_data[0]) > 3:
+            if len(obstacle_data[0]) > 4:
                 for obstacle in obstacle_data:
-                    self.obstacles.append(Obstacle(float(obstacle[0]), float(obstacle[1]), float(obstacle[2]), float(obstacle[3])))
+                    new_obstacle = Obstacle(float(obstacle[0]), float(obstacle[1]), float(obstacle[2]), float(obstacle[3]))
+                    new_obstacle.rotation = float(obstacle[4])
+                    self.obstacles.append(new_obstacle)
+                    
 
             self.hazards = []
-            if len(hazard_data[0]) > 3:
+            if len(hazard_data[0]) > 4:
                 for hazard in hazard_data:
-                    self.hazards.append(Hazard(float(hazard[0]), float(hazard[1]), float(hazard[2]), float(hazard[3])))
+                    new_hazard = Hazard(float(hazard[0]), float(hazard[1]), float(hazard[2]), float(hazard[3]))
+                    new_hazard.rotation = float(hazard[4])
+                    self.hazards.append(new_hazard)
 
             self.portals = []
             if len(portal_data[0]) > 4:
                 for portal in portal_data:
-                    self.portals.append(Portal(float(portal[0]), float(portal[1]), float(portal[2]), float(portal[3]), int(portal[4])))
+                    new_portal = Portal(float(portal[0]), float(portal[1]), float(portal[2]), float(portal[3]), int(portal[4]))
+                    new_portal.rotation = float(portal[5])
+                    self.portals.append(new_portal)
 
             #print(str(data) + " loaded.")
         
@@ -775,12 +797,12 @@ player_random = False
 player_gradient = False
 alpha_player = False
 
-gravity = 1.75
+gravity = 1.5
 gamespeed = 60/fps
 ground_height = 0
 
-flat_friction = .1
-multiplicative_friction = .02
+flat_friction = .2
+multiplicative_friction = .05
 air_friction_mult = .333
 if player_gradient:
     flat_friction = 0
@@ -886,16 +908,29 @@ if alpha_player:
     player.max_speed_y = 60
     player.acceleration = 2.25
     print("Alpha player spawned")
-    
+
+
+player_default_image = pygame.image.load("sebocube.png")
+hazard_default_image = pygame.image.load("Larimore_icespike.png")
+obstacle_default_image = pygame.image.load("Larimore_block.png")
+background_default_image = pygame.image.load("GJ_Background.jpg")
+menu_background_default_image = pygame.image.load("GJ_Menu_Background.png")
+
 for player in players:
     cube_width, cube_height = player.width*xscale, player.height*yscale
-    cube_image = pygame.transform.smoothscale(pygame.image.load("sebocube.png"), (cube_width, cube_height))
+    cube_image = pygame.transform.smoothscale(player_default_image, (cube_width, cube_height))
     cube_rotation = 0
     player.sprite = Sprite(cube_image, player.x*xscale, player.y*yscale, player.rotation)
+
+
     
 obstacles = []
 hazards = []
 portals = []
+
+background = Sprite(pygame.transform.smoothscale(background_default_image, (screen_width, screen_height)), 0, 0, 0)
+
+menu_background = Sprite(pygame.transform.smoothscale(menu_background_default_image, (screen_width, screen_height)), 0, 0, 0)
 
 
 
@@ -1062,12 +1097,17 @@ def make_new_object(id_, pos):
 
     if id_ == BLOCK:
         x, y = get_grid_pos(pos)
-        obstacles.append(Obstacle(x ,y, grid_width, grid_height))
+        new_obstacle = Obstacle(x ,y, grid_width, grid_height)
+        if obstacle_sprite:
+            make_sprite(new_obstacle, obstacle_default_image)
+        obstacles.append(new_obstacle)
 
     if id_ == SPIKE:
         x, y = get_grid_pos(pos)
-
-        hazards.append(Hazard(x, y, grid_width, grid_height))
+        new_spike = Hazard(x, y, grid_width, grid_height)
+        if hazard_sprite:
+            make_sprite(new_spike, hazard_default_image)
+        hazards.append(new_spike)
 
     if id_ == YELLOW_PORTAL:
         x, y = get_grid_pos(pos)
@@ -1091,11 +1131,17 @@ def make_new_object(id_, pos):
 
     if id_ == SLAB:
         x, y = get_special_grid_pos(pos, grid_width, grid_height/2)
-        obstacles.append(Obstacle(x ,y, grid_width, grid_height/2))
+        new_obstacle = Obstacle(x ,y, grid_width, grid_height/2)
+        if obstacle_sprite:
+            make_sprite(new_obstacle, obstacle_default_image)
+        obstacles.append(new_obstacle)
 
     if id_ == MINI_BLOCK:
         x, y = get_special_grid_pos(pos, grid_width/2, grid_height/2)
-        obstacles.append(Obstacle(x ,y, grid_width/2, grid_height/2))
+        new_obstacle = Obstacle(x ,y, grid_width/2, grid_height/2)
+        if obstacle_sprite:
+            make_sprite(new_obstacle, obstacle_default_image)
+        obstacles.append(new_obstacle)
 
     if id_ == JUMP_PAD:
         x, y = get_special_grid_pos(pos, grid_width, grid_height/2)
@@ -1109,14 +1155,42 @@ def make_new_object(id_, pos):
         
 
 
-
+num_levels = 10
 def load_level(level_num):
+    if level_num > num_levels:
+        return
     config.read('slot_'+str(level_num)+'.ini')
     saved_level_data = config.get(('slot '+str(level_num)), ('level'))
     level = Level(saved_level_data)
     set_level(level)
+
+    for hazard in hazards:
+        make_sprite(hazard, hazard_default_image)
+        update_sprite(hazard)
+        
+    for obstacle in obstacles:
+        make_sprite(obstacle, obstacle_default_image)
+        
     for player in players:
         player.die()
+
+
+def reload_hazard_sprite(hazard):
+        cube_width, cube_height = hazard.width*xscale, hazard.height*yscale
+        cube_image = pygame.transform.scale(hazard_default_image, (cube_width, cube_height))
+        cube_rotation = 0
+        hazard.sprite = Sprite(cube_image, hazard.x*xscale, hazard.y*yscale, hazard.rotation)
+
+def update_sprite(self):
+            self.sprite.x = self.x*xscale
+            self.sprite.y = self.y*yscale
+            self.sprite.width = self.width*xscale
+            self.sprite.height = self.height*yscale
+            self.sprite.rotation = self.rotation
+
+def make_sprite(self, image):
+    image = pygame.transform.smoothscale(image, (self.width*xscale, self.height*yscale))
+    self.sprite = Sprite(image, self.x*xscale, self.y*yscale, self.rotation)
 
 def save_level_good(level_num):
     saved_level_data = save_level()
@@ -1264,6 +1338,7 @@ def main_menu():
     global menu
     global playing
     window.fill(BACKGROUND_COLOR)
+    menu_background.draw()
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -1297,6 +1372,24 @@ def main_menu():
 load_level(level_num)
 load_new_level = False
 
+def reload_all_sprites():
+    global background
+    global menu_background
+    for player in players:
+        make_sprite(player, player_default_image)
+
+    for hazard in hazards:
+        make_sprite(hazard, hazard_default_image)
+
+
+    for obstacle in obstacles:
+        make_sprite(obstacle, obstacle_default_image)
+
+    background = Sprite(pygame.transform.smoothscale(background_default_image, (screen_width, screen_height)), 0, 0, 0)
+    menu_background = Sprite(pygame.transform.smoothscale(menu_background_default_image, (screen_width, screen_height)), 0, 0, 0)
+
+
+
 while playing:
     if screen_width != pygame.display.get_surface().get_width() or screen_height != pygame.display.get_surface().get_height():
         
@@ -1305,6 +1398,7 @@ while playing:
         xscale = screen_width/width
         yscale = screen_height/height
         reload_buttons()
+        reload_all_sprites()
         
     if menu:
         main_menu()
@@ -1318,6 +1412,7 @@ while playing:
         last_time = time.time()
        
     window.fill(BACKGROUND_COLOR)
+    background.draw()
 
     if load_new_level:
         load_level(level_num)
@@ -1392,8 +1487,18 @@ while playing:
                                 hazard.rotation += 90
                                 if hazard.rotation >= 360:
                                     hazard.rotation = 0
+                                #update_sprite(hazard)
                                 break
-                    
+                    for obstacle in obstacles:
+                        if x > obstacle.x and x < obstacle.x+obstacle.width:
+                            if y > obstacle.y and y < obstacle.y+obstacle.height:
+                                obstacle.rotation += 90
+                                if obstacle.rotation >= 360:
+                                    obstacle.rotation = 0
+                                #update_sprite(hazard)
+                                break
+
+                
         if event.type == pygame.MOUSEBUTTONDOWN:
             if not mouse_over_anything() and editing:
                 make_new_object(selected, get_mouse_pos())
