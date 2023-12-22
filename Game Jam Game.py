@@ -66,7 +66,7 @@ BACKGROUND_COLOR = bg_blue
 
 clock = pygame.time.Clock()
 
-show_hitboxes = True
+show_hitboxes = False
 
 autoscroll = False
 autoscroll_start_x = round(width/3)
