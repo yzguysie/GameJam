@@ -13,8 +13,6 @@ import winsound
 import ui
 import os
 #from win32gui import FindWindow, GetWindowRect
-
-
     
 from configparser import ConfigParser
 
@@ -180,28 +178,7 @@ class Player():
             self.sprite.height = self.height*yscale
             self.sprite.draw()
             return
-        
-        
-##        if player_circle:
-##            color = (self.color[0]*55/100, self.color[1]*55/100, self.color[2]*55/100)
-##            pygame.gfxdraw.filled_ellipse(window, round((self.x+self.width/2)*xscale), round((self.y+self.height/2)*yscale), round((self.width/2)*xscale), round((self.height/2)*yscale), self.color)
-##            pygame.gfxdraw.aaellipse(window, round((self.x+self.width/2)*xscale), round((self.y+self.height/2)*yscale), round((self.width/2)*xscale), round((self.height/2)*yscale), color)
-##
-##            return
-##        self.rect = (self.x*xscale, self.y*yscale, self.width*xscale, self.height*yscale)
-##        pygame.gfxdraw.box(window, self.rect, self.color)
-##        
-##
-##        if self.fancy and not player_circle:
-##
-##            lowest = 50
-##            step = 15/xscale
-##            for i in range(int(int(100-lowest)/int(step))):
-##                self.rect = ((self.x*xscale+i), (self.y*yscale+i), (self.width*xscale-i*2), (self.height*yscale-i*2))
-##                pygame.gfxdraw.rectangle(window, self.rect, (self.color[0]*(lowest+(i*step))/100, self.color[1]*(lowest+(i*step))/100, self.color[2]*(lowest+(i*step))/100))
-##
-
-
+                
     def on_surface(self):
         if self.gravity >= 0:
             if self.y >= height-(ground_height+self.height):
@@ -228,12 +205,6 @@ class Player():
         else:
             if self.y <= world_height_limit:
                 return True
-
-##        if self.x+self.width >= width:
-##            return True
-##        
-##        if self.x <= 0:
-##            return True
 
         for obstacle in obstacles:
             if self.is_touching_no_generosity(obstacle):
@@ -346,21 +317,6 @@ class Player():
         player_y_speed = self.yspeed*gamespeed
         gravity_sign = (self.gravity/abs(self.gravity))
         rightside_up = self.gravity >= 0
-        
-        """
-        if self.gravity >= 0:
-            if player_right-player_x_speed > box_left and player_left-player_x_speed < box_right:
-                if player_bottom >= box_top and player_top+player_y_speed <= box_top:
-                        return True
-            return False
-        if self.x+self.width-self.xspeed*gamespeed > obstacle.x and self.x+self.xspeed*gamespeed < obstacle.x+obstacle.width:
-            if self.y <= obstacle.y+obstacle.height and self.y+self.height > obstacle.y:
-                #if self.y+self.height <= obstacle.y+self.height:
-                return True
-        return False
-        
-        
-        """
         on_x = player_right-player_x_speed > box_left and player_left-player_x_speed < box_right
         on_y = False
 
@@ -402,15 +358,6 @@ class Player():
         self.x += self.xspeed*gamespeed
         self.y += self.yspeed*gamespeed
         self.do_collision()
-       
-##        if self.x < 0:
-##
-##            self.x = 0
-##            self.xspeed = 0
-##
-##        if self.x > width-self.width:
-##            self.x = width-self.width
-##            self.xspeed = 0
            
         if self.y < world_height_limit:
             self.y = world_height_limit
@@ -658,24 +605,8 @@ class Portal:
 
         lowest = .5
         highest = 1
-        #color = (self.color[0]*lowest, self.color[1]*lowest, self.color[2]*lowest)
         pygame.gfxdraw.aaellipse(window, round(((self.x-autoscroll_offset_x)+self.width/2)*xscale), round(((self.y-autoscroll_offset_y)+self.height/2)*yscale), round((self.width/2)*xscale), round((self.height/2)*yscale), self.color)
-        """
-        repititions = round(self.height/6)
-        divide = 3
-        for i in range(repititions):
-            color = (min(self.color[0]*(lowest+(highest-lowest)*(i+1/repititions)), 255), min(self.color[1]*lowest+(highest-lowest)*(i+1/repititions), 255), min(self.color[2]*lowest+(highest-lowest)*(i+1/repititions),255))
-            pygame.gfxdraw.ellipse(window, round(self.x+self.width/2+i/divide), round(self.y+self.height/2), round(self.width/2-i/divide*2), round(self.height/2-i/divide*2), color)
 
-        for i in range(repititions):
-            color = (self.color[0]*(lowest+(highest-lowest)*((repititions-(i+1))/repititions)), self.color[1]*(lowest+(highest-lowest)*((repititions-(i+1))/repititions)), self.color[2]*(lowest+(highest-lowest)*((repititions-(i+1))/repititions)))
-            pygame.gfxdraw.ellipse(window, round(self.x+self.width/2+(i+repititions)/divide), round(self.y+self.height/2), round(self.width/2-(i+repititions)/divide*2), round(self.height/2-(i+repititions)*divide/4), color)
-           
-        color = (self.color[0]*lowest, self.color[1]*lowest, self.color[2]*lowest)
-        pygame.gfxdraw.aaellipse(window, round(self.x+self.width/2), round(self.y+self.height/2), round(self.width/2), round(self.height/2), color)
-       
-   
-        """
 
 
 
@@ -861,18 +792,7 @@ def reload_buttons():
     global save_button
     global load_button
     global reset_button
-##    global delete_button
-##    global block_button
-##    global slab_button
-##    global mini_block_button
-##    global spike_button
-##    
-##    global yellow_portal_button
-##    global blue_portal_button
-##    global mini_portal_button
-##    global normal_portal_button
-##    global jump_pad_button
-##   global end_portal_button
+
     global slot_1_button
     global slot_2_button
     global slot_3_button
@@ -949,19 +869,6 @@ def reload_buttons():
             new_button = ui.button(window, new_button_x, new_button_y, button_width, button_height, f"Slot {i}", partial(on_slot_clicked, i))
             if editing:
                 buttons.append(new_button)
-        
-                
-        
-##        slot_1_button = ui.button(window, screen_width-button_width*2, button_height*2, button_width, button_height, "Slot 1", partial(on_slot_clicked, 1))
-##        slot_2_button = ui.button(window, screen_width-button_width, button_height*2, button_width, button_height, "Slot 2")
-##        slot_3_button = ui.button(window, screen_width-button_width*2, button_height*3, button_width, button_height, "Slot 3")
-##        slot_4_button = ui.button(window, screen_width-button_width, button_height*3, button_width, button_height, "Slot 4")
-##        slot_5_button = ui.button(window, screen_width-button_width*2, button_height*4, button_width, button_height, "Slot 5")
-##        slot_6_button = ui.button(window, screen_width-button_width, button_height*4, button_width, button_height, "Slot 6")
-##        slot_7_button = ui.button(window, screen_width-button_width*2, button_height*5, button_width, button_height, "Slot 7")
-##        slot_8_button = ui.button(window, screen_width-button_width, button_height*5, button_width, button_height, "Slot 8")
-##        slot_9_button = ui.button(window, screen_width-button_width*2, button_height*6, button_width, button_height, "Slot 9")
-##        slot_10_button = ui.button(window, screen_width-button_width, button_height*6, button_width, button_height, "slot 10")
 
         recover_button = ui.button(window, screen_width-button_width, button_height, button_width, button_height, "Recover")
 
@@ -971,17 +878,6 @@ def reload_buttons():
             buttons.append(save_button)
             buttons.append(load_button)
             buttons.append(reset_button)
-            ##        buttons.append(slot_1_button)
-            ##        buttons.append(slot_2_button)
-            ##        buttons.append(slot_3_button)
-            ##        buttons.append(slot_4_button)
-            ##        buttons.append(slot_5_button)
-            ##        buttons.append(slot_5_button)
-            ##        buttons.append(slot_6_button)
-            ##        buttons.append(slot_7_button)
-            ##        buttons.append(slot_8_button)
-            ##        buttons.append(slot_9_button)
-            ##        buttons.append(slot_10_button)
             buttons.append(recover_button)
             buttons.append(delete_button)
             buttons.append(select_button)
@@ -1002,23 +898,6 @@ def reload_buttons():
         cube_rotation = 0
         player.sprite = Sprite(cube_image, player.x*xscale, player.y*yscale, player.rotation)
 
-
-"""
-levels = []
-config.read('local_levels.ini')
-saved_levels_data = config.get(('slot 1'), ('level'))
-level = Level(saved_level_data)
-set_level(level)
-loading_level = False
-
-              elif loading_level:
-                    config.read('slot_1.ini')
-                    saved_level_data = config.get(('slot 1'), ('level'))
-                    level = Level(saved_level_data)
-                    set_level(level)
-                    loading_level = False
-"""
-
 level_num = 1
 player_count = 1
 player_random = False
@@ -1036,14 +915,6 @@ air_friction_mult = .333
 if player_gradient:
     flat_friction = 0
     air_friction_mult = 1
-
-
-   
-   
-
-   
-
-#player = Player()
 
 
 players = []
@@ -1166,17 +1037,6 @@ background = Sprite(pygame.transform.smoothscale(background_default_image, (scre
 menu_background = Sprite(pygame.transform.smoothscale(menu_background_default_image, (screen_width, screen_height)), 0, 0, 0)
 
 
-# Clean this up - delete this
-# numx = 0
-# numy = 0
-# for i in range(numy):
-#     for j in range(numx):
-#         obstacles.append(Obstacle(width-width/numx*(numx-j-.25), height-height/numy*(numy-i), width/numx/2, 25))
-
-
-
-
-
 frames = 0
 playing = True
 last_time = time.time()-100
@@ -1215,68 +1075,8 @@ button_height    = round(screen_height/30)
 
 
 reload_buttons()
-##if editing:
-##    save_button = ui.button(window, screen_width-button_width*2, 0, button_width, button_height, "save")
-##    load_button = ui.button(window, screen_width-button_width, 0, button_width, button_height, "load")
-##    reset_button = ui.button(window, screen_width-button_width*2, button_height, button_width, button_height, "reset")
-##    delete_button = ui.button(window, 0, (button_height+5), button_width, button_height, "delete")
-##    block_button = ui.button(window, (button_width+5)*0, (button_height+5)*2, button_width, button_height, "block", lambda : selected = BLOCK)
-##    slab_button = ui.button(window, (button_width+5)*1, (button_height+5)*2, button_width, button_height, "slab")
-##    mini_block_button = ui.button(window, (button_width+5)*2, (button_height+5)*2, button_width, button_height, "mini block")
-##    spike_button = ui.button(window, (button_width+5)*3, (button_height+5)*2, button_width, button_height, "spike")
-##    yellow_portal_button = ui.button(window, 0, (button_height+5)*3, button_width*2, button_height, "upside down portal")
-##    blue_portal_button = ui.button(window, (button_width+5)*2, (button_height+5)*3, button_width*2, button_height, "rightside up portal")
-##    mini_portal_button = ui.button(window, (button_width+5)*0, (button_height+5)*4, button_width, button_height, "Normal portal")
-##    normal_portal_button = ui.button(window, (button_width+5)*1, (button_height+5)*4, button_width, button_height, "Mini portal")
-##    end_portal_button = ui.button(window, (button_width+5)*2, (button_height+5)*4, button_width, button_height, "End portal")
-##    jump_pad_button = ui.button(window, (button_width+5)*3, (button_height+5)*4, button_width, button_height, "Jump pad")
-##
-##    slot_1_button = ui.button(window, screen_width-button_width*2, button_height*2, button_width, button_height, "Slot 1")
-##    slot_2_button = ui.button(window, screen_width-button_width, button_height*2, button_width, button_height, "Slot 2")
-##    slot_3_button = ui.button(window, screen_width-button_width*2, button_height*3, button_width, button_height, "Slot 3")
-##    slot_4_button = ui.button(window, screen_width-button_width, button_height*3, button_width, button_height, "Slot 4")
-##    slot_5_button = ui.button(window, screen_width-button_width*2, button_height*4, button_width, button_height, "Slot 5")
-##    slot_6_button = ui.button(window, screen_width-button_width, button_height*4, button_width, button_height, "Slot 6")
-##    slot_7_button = ui.button(window, screen_width-button_width*2, button_height*5, button_width, button_height, "Slot 7")
-##    slot_8_button = ui.button(window, screen_width-button_width, button_height*5, button_width, button_height, "Slot 8")
-##    slot_9_button = ui.button(window, screen_width-button_width*2, button_height*6, button_width, button_height, "Slot 9")
-##    slot_10_button = ui.button(window, screen_width-button_width, button_height*6, button_width, button_height, "slot 10")
-##
-##    recover_button = ui.button(window, screen_width-button_width, button_height, button_width, button_height, "Recover")
-##
-##    buttons.append(save_button)
-##    buttons.append(load_button)
-##    buttons.append(reset_button)
-##    buttons.append(slot_1_button)
-##    buttons.append(slot_2_button)
-##    buttons.append(slot_3_button)
-##    buttons.append(slot_4_button)
-##    buttons.append(slot_5_button)
-##    buttons.append(slot_5_button)
-##    buttons.append(slot_6_button)
-##    buttons.append(slot_7_button)
-##    buttons.append(slot_8_button)
-##    buttons.append(slot_9_button)
-##    buttons.append(slot_10_button)
-##    buttons.append(recover_button)
-##    buttons.append(delete_button)
-##    buttons.append(block_button)
-##    buttons.append(mini_block_button)
-##    buttons.append(spike_button)
-##    buttons.append(yellow_portal_button)
-##    buttons.append(blue_portal_button)
-##    buttons.append(mini_portal_button)
-##    buttons.append(normal_portal_button)
-##    buttons.append(end_portal_button)
-##    buttons.append(slab_button)
-##    buttons.append(jump_pad_button)
-
 
 sliders = []
-
-#saved_level_data = save_level()
-#level = Level(saved_level_data)
-#set_level(level)
 
 text_boxes = []
 
@@ -1723,19 +1523,6 @@ while playing:
     #Nvm don't Clean up - don't fix this because you already did lol()())()())()()(the obstacles will always be before the others and will always be selected first, so obstacles must be deleted to select hazards/portals on the same grid space
     #objects = obstacles+hazards+portals
 
- 
-                   
-    # for obstacle in obstacles:
-    #     obstacle.tick()
-       
-    # for hazard in hazards:
-    #     hazard.tick()
-
-    # for portal in portals:
-    #     portal.tick()
-
-
-
     # Clean this up - put into func
         
     pivot_x = players[0].x+players[0].width/2+players[0].interpolation_offset_x-autoscroll_offset_x
@@ -1766,153 +1553,6 @@ while playing:
         #global loading_level
         button.draw()
         button.get_clicked()
-##            if button == save_button:
-##                saving_level = True
-##                #saved_level_data = save_level()
-##                #config['local levels'] = {}
-##                #config['local levels']['level'] = saved_level_data
-##                #with open('local_levels.ini', 'w') as configfile:
-##                #    config.write(configfile)
-##                #print("Saved level")
-##                loading_level = False
-##                
-##            elif button == load_button:
-##                loading_level = True
-##                #config.read('local_levels.ini')
-##                #saved_level_data = config.get(('local levels'), ('level'))
-##                #level = Level(saved_level_data)
-##                #set_level(level)
-##                saving_level = False
-
-##            if button == reset_button:
-##                level = Level("")
-##                set_level(level)
-
-
-##            elif button == delete_button:
-##                selected = DELETE
-##                
-##            elif button == block_button:
-##                selected = BLOCK
-##
-##            elif button == slab_button:
-##                selected = SLAB
-##
-##            elif button == mini_block_button:
-##                selected = MINI_BLOCK
-##            
-##            elif button == spike_button:
-##                selected = SPIKE
-##
-##            elif button == yellow_portal_button:
-##                selected = YELLOW_PORTAL
-##
-##            elif button == blue_portal_button:
-##                selected = BLUE_PORTAL
-##
-##            elif button == mini_portal_button:
-##                selected = MINI_PORTAL
-##                
-##            elif button == normal_portal_button:
-##                selected = NORMAL_PORTAL
-##                
-##            elif button == end_portal_button:
-##                selected = END_PORTAL
-##
-##            elif button == jump_pad_button:
-##                selected = JUMP_PAD
-
-                
-
-##            elif button == slot_1_button:
-##                if saving_level:
-##                    save_level_good(1)
-##                    saving_level = False
-##                elif loading_level:
-##                    load_level(1)
-##                    loading_level = False
-##
-
-##            elif button == slot_2_button:
-##                if saving_level:
-##                    save_level_good(2)
-##                    saving_level = False
-##                elif loading_level:
-##                    load_level(2)
-##                    loading_level = False
-##
-##
-##            elif button == slot_3_button:
-##                if saving_level:
-##                    save_level_good(3)
-##                    saving_level = False
-##                elif loading_level:
-##                    load_level(3)
-##                    loading_level = False
-##
-##
-##            elif button == slot_4_button:
-##                if saving_level:
-##                    save_level_good(4)
-##                    saving_level = False
-##                elif loading_level:
-##                    load_level(4)
-##                    loading_level = False
-##
-##            elif button == slot_5_button:
-##                if saving_level:
-##                    save_level_good(5)
-##                    saving_level = False
-##                elif loading_level:
-##                    load_level(5)
-##                    loading_level = False
-##
-##            elif button == slot_6_button:
-##                if saving_level:
-##                    save_level_good(6)
-##                    saving_level = False
-##                elif loading_level:
-##                    load_level(6)
-##                    loading_level = False
-##
-##            elif button == slot_7_button:
-##                if saving_level:
-##                    save_level_good(7)
-##                    saving_level = False
-##                elif loading_level:
-##                    load_level(7)
-##                    loading_level = False
-##
-##            elif button == slot_8_button:
-##                if saving_level:
-##                    save_level_good(8)
-##                    saving_level = False
-##                elif loading_level:
-##                    load_level(8)
-##                    loading_level = False
-##
-##            elif button == slot_9_button:
-##                if saving_level:
-##                    save_level_good(9)
-##                    saving_level = False
-##                elif loading_level:
-##                    load_level(9)
-##                    loading_level = False
-##
-##            elif button == slot_10_button:
-##                if saving_level:
-##                    save_level_good(10)
-##                    saving_level = False
-##                elif loading_level:
-##                    load_level(10)
-##                    loading_level = False
-
-##            if button == recover_button:
-##                config.read('autosave.ini')
-##                saved_level_data = config.get(('autosave'), ('level'))
-##                level = Level(saved_level_data)
-##                set_level(level)
-##                
     
     dialogue = dialogue_font.render("FPS: " + str(fps_), True, white)
     dialogue_rect = dialogue.get_rect()
