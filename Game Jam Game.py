@@ -42,7 +42,6 @@ autosave = True
 window = pygame.display.set_mode([screen_width, screen_height], pygame.RESIZABLE)
 pygame.display.set_caption("Game Jam Game")
 
-
 font = 'arial'
 font_width = int(16)
 dialogue_font = pygame.font.SysFont(font, font_width)
@@ -243,13 +242,8 @@ class Player():
                     self.x = box_right
                     self.xspeed = 0
 
-
-
                     hitting = True
 
-
-           
-            
             if self.gravity >= 0:
                 #if hitting top of block
                 #if player_right-player_x_speed > box_left and player_left+player_x_speed < box_right: #Caused player hitting right side of column of blocks to get "Caught" idk if good tho
@@ -282,8 +276,6 @@ class Player():
                         elif self.yspeed > 0:
                             self.yspeed = 0
                             self.y = obstacle.y-self.height
-
-                
 
         for hazard in hazards:
             if self.is_touching(hazard):
@@ -583,9 +575,6 @@ class Portal:
             if self.check_collision(player):
                 self.apply(player)
 
-
-
-
     def check_collision(self, player):
         if player.x+player.width > self.x and player.x < self.x+self.width:
             if player.y+player.height > self.y and player.y < self.y+self.height:
@@ -606,9 +595,6 @@ class Portal:
         lowest = .5
         highest = 1
         pygame.gfxdraw.aaellipse(window, round(((self.x-autoscroll_offset_x)+self.width/2)*xscale), round(((self.y-autoscroll_offset_y)+self.height/2)*yscale), round((self.width/2)*xscale), round((self.height/2)*yscale), self.color)
-
-
-
 
 
 class Level():
@@ -638,9 +624,6 @@ class Level():
             for i in range(len(portal_data)):
                 portal_data[i] = portal_data[i].split("@")
             
-               
-
-           
             self.player = Player()
             if len(player_data) == 2:
                 self.player.x = float(player_data[0])
@@ -679,8 +662,6 @@ class Level():
         
         #except:
             #print("Could not load level: level data corrupted")
-
-       
 
 def set_level(level):
     global player
@@ -729,17 +710,13 @@ def save_level():
     #print(data)
     return data
 
-
-
 menu_button_width = round(screen_width/5)
-
 menu_button_height = round(screen_height/5)
 menu_button_x = screen_width/2-menu_button_width/2
 
 menu_buttons = []
 
 menu = True
-
 
 DELETE = 0
 BLOCK = 1
@@ -753,7 +730,6 @@ MINI_BLOCK = 8
 END_PORTAL = 9
 JUMP_PAD = 10
 SELECT = 11
-
 
 selected = BLOCK
 
@@ -818,8 +794,6 @@ def reload_buttons():
     global real_xscale
     autoscroll_start_x = round(width/3*((screen_width/screen_height)/16*9))
     autoscroll_end_x = round(2*width/3*((screen_width/screen_height)/16*9))
-
-
     
     buttons = []
     button_width = round(screen_width/20)
@@ -871,8 +845,6 @@ def reload_buttons():
                 buttons.append(new_button)
 
         recover_button = ui.button(window, screen_width-button_width, button_height, button_width, button_height, "Recover")
-
-
 
         if editing:
             buttons.append(save_button)
@@ -1010,8 +982,6 @@ ex_text_box = ui.text_box(window, 600, 100, 100, 100)
 
 #text_boxes.append(ex_text_box)
 
-
-
 def get_grid_pos(pos):
     x, y = pos
 
@@ -1032,8 +1002,6 @@ def get_mouse_pos():
 
     x, y = pygame.mouse.get_pos()
     return x/xscale, y/yscale
-
-
 
 def get_objs_touching(objs, pos, amount):
     touching = []
@@ -1075,10 +1043,6 @@ def rotate_touching(pos):
         obj.rotation += 90
         obj.rotation %= 360
     
-
-
-
-
 def make_new_object(id_, pos):
     global objects_editing
     x, y = pos
@@ -1101,8 +1065,6 @@ def make_new_object(id_, pos):
             objects_editing = []
         
         #CLEAN UP - you NEED to put every object in one list bro (ok i did but kinda in a bad way so fix that now)
-        
-
     if id_ == BLOCK:
         x, y = get_grid_pos(pos)
         new_obstacle = Obstacle(x ,y, grid_width, grid_height)
@@ -1226,8 +1188,6 @@ def save_level_good(level_num):
     with open('resources/levels/slot_'+str(level_num)+'.ini', 'w') as configfile:
         config.write(configfile)
 
-
-
 def save_all_levels(num):
     for i in range(1, num+1):
         load_level(f'slot_{i}')
@@ -1251,8 +1211,6 @@ def main_menu():
                 playing = False
                 break
             
-            
-            
     for button in menu_buttons:
         button.draw()
         if button.get_clicked():
@@ -1271,8 +1229,6 @@ def main_menu():
                 playing = True
                 menu = False
                 reload_buttons()
-
-
 
             elif button == quit_button:
                 menu = False
@@ -1300,8 +1256,6 @@ def reload_all_sprites():
     background = Sprite(pygame.transform.smoothscale(background_default_image, (screen_width, screen_height)), 0, 0, 0)
     menu_background = Sprite(pygame.transform.smoothscale(menu_background_default_image, (screen_width, screen_height)), 0, 0, 0)
 
-
-
 while playing:
     if screen_width != pygame.display.get_surface().get_width() or screen_height != pygame.display.get_surface().get_height():
         
@@ -1318,15 +1272,9 @@ while playing:
         main_menu()
         continue
 
-        
-
-
     if frames % max(int(fps/2), 1) == 0:
         fps_ = int(1/((time.time()-last_time)/(fps/2))+.5)
         last_time = time.time()
-    
-
-
     
     window.fill(BACKGROUND_COLOR)
     background.draw()
@@ -1369,12 +1317,6 @@ while playing:
                 elif event.key == pygame.K_d:
                     for obj in objects_editing:
                         obj.x += grid_width
-                    
-
-
-
-                
-
             
                 elif event.key == pygame.K_l:
                     loading_level = True
