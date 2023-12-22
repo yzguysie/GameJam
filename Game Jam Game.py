@@ -902,9 +902,6 @@ level_num = 1
 player_count = 1
 player_random = False
 
-player_gradient = False
-alpha_player = False
-
 gravity = 1.15
 gamespeed = 60/tickrate
 ground_height = 0
@@ -912,17 +909,13 @@ ground_height = 0
 flat_friction = .2
 multiplicative_friction = .05
 air_friction_mult = .333
-if player_gradient:
-    flat_friction = 0
-    air_friction_mult = 1
-
 
 players = []
 
 
 for i in range(player_count):
     player = Player()
-    if (player_random or player_gradient) and i % 2 == 1:
+    if (player_random) and i % 2 == 1:
         player.gravity = -player.gravity
     if player_random:
         player.gravity *= random.uniform(0, 2)
@@ -943,74 +936,7 @@ for i in range(player_count):
         player.max_speed_y = random.uniform(10, 50)
         player.acceleration = random.uniform(.5, 2)
 
-    elif player_gradient:
-        player.x = width*(i/player_count)-i/(player_count)*40+10
-        b = 255*i/(player_count)
-        
-        g = 255*(i+player_count/2)/player_count
-        
-            
-        r = 255*(i+player_count)/player_count
-        
-        if r > 255:
-            r = 560-r
-
-        if g > 255:
-            g = 560-g
-
-        if b > 255:
-            b = 560-b
-
-        if r > 255:
-            r = 255
-
-        if g > 255:
-            g = 255
-
-        if b > 255:
-            b = 255
-
-        r = max(r, 0)
-        g = max(g, 0)
-        b = max(b, 0)
-
-        
-
-        
-        player.color = (r, g, b)
-        player.width = i/(player_count)*40+10
-        player.height = player.width
-        player.normwidth = player.width
-        player.normheight = player.height
-        player.miniwidth = player.width/math.sqrt(2)
-        player.miniheight = player.height/math.sqrt(2)
-        player.jump_height = i/(player_count)*20+5
-        player.mini_jump_height = player.jump_height/1.2
-        player.mini = False
-        player.set_mini(player.mini)
-        player.fancy = True
-        player.max_speed_x = 500
-        player.acceleration = (i/player_count)*2+(1/player_count)
     players.append(player)
-
-if alpha_player:
-    player = players[len(players)-1]
-    player.color = (255, 32, 48)
-    player.width = 55
-    player.height = 55
-    player.normwidth = player.width
-    player.normheight = player.height
-    player.miniwidth = player.width/math.sqrt(2)
-    player.miniheight = player.height/math.sqrt(2)
-    player.jump_height = 35
-    player.gravity = 1.35
-    player.max_speed_x = 25
-    player.max_speed_y = 60
-    player.acceleration = 2.25
-    player.interpolation_offset_x = 0
-    player.interpolation_offset_y = 0
-    print("Alpha player spawned")
-
 
 player_default_image = pygame.image.load("resources/images/sebocube.png")
 hazard_default_image = pygame.image.load("resources/images/Larimore_icespike.png")
