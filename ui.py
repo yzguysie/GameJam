@@ -127,8 +127,6 @@ class text_box:
         pygame.draw.rect(self.surface, self.border_color, self.rect, round(min(self.width, self.height)/25))
         self.surface.blit(self.disp_text, (self.rect[0], self.rect[1]))
         
-
-
         
     def tick(self):
         self.draw()
@@ -195,8 +193,6 @@ class menu:
             for button in self.buttons:
                 button.get_clicked()
     
-        
-
 class slider:
     def __init__(self, surface, x, y, width, height, minimum, maximum, step_amount, text, slider_pos, color, border_color, text_color, slider_color, slide_color, slide_color_dark, onclick=None):
         self.surface = surface
@@ -301,9 +297,6 @@ class slider:
             self.slide_color_dark = (196, 64, 64)
             self.shine_color = (255, 225, 225)
             self.text_color = (255, 64, 64)
-
-
-        
 
     def get_clicked(self):
         self.update()
