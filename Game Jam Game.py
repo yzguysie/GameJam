@@ -24,6 +24,10 @@ portal_sprite = False
 
 screen_width, screen_height = 768, 432
 
+
+
+print("6es6")
+
 #MAKE "BUMP pads" that PUSH you like terracotta in minecraft (Like sideways jump pad or those thingies in edge)
 fps = 120
 tickrate = 120
