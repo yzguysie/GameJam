@@ -153,7 +153,7 @@ class Player():
         self.gravity = abs(self.gravity)
 
         # Clean this up - repeated code and loads every time player dies
-        cube_width, cube_height = self.width*xscale, self.height*yscale
+        cube_width, cube_height = round(self.width*xscale), round(self.height*yscale)
         cube_image = pygame.transform.smoothscale(player_default_image, (cube_width, cube_height))
         self.sprite = Sprite(cube_image, self.x*xscale, self.y*yscale, self.rotation)
        
@@ -865,7 +865,7 @@ def reload_buttons():
             buttons.append(jump_pad_button)
     # Clean this up - repeated code, loading image for each player
     for player in players:
-        cube_width, cube_height = player.width*xscale, player.height*yscale
+        cube_width, cube_height = round(player.width*xscale), round(player.height*yscale)
         cube_image = pygame.transform.smoothscale(player_default_image, (cube_width, cube_height))
         cube_rotation = 0
         player.sprite = Sprite(cube_image, player.x*xscale, player.y*yscale, player.rotation)
@@ -917,7 +917,7 @@ background_default_image = pygame.image.load("resources/images/GJ_Background.jpg
 menu_background_default_image = pygame.image.load("resources/images/GJ_Menu_Background.png")
 
 for player in players:
-    cube_width, cube_height = player.width*xscale, player.height*yscale
+    cube_width, cube_height = round(player.width*xscale), round(player.height*yscale)
     cube_image = pygame.transform.smoothscale(player_default_image, (cube_width, cube_height))
     cube_rotation = 0
     player.sprite = Sprite(cube_image, player.x*xscale, player.y*yscale, player.rotation)
@@ -1164,7 +1164,7 @@ def load_level(level_name):
 
 
 def reload_hazard_sprite(hazard):
-        cube_width, cube_height = hazard.width*xscale, hazard.height*yscale
+        cube_width, cube_height = round(hazard.width*xscale), round(hazard.height*yscale)
         cube_image = pygame.transform.scale(hazard_default_image, (cube_width, cube_height))
         cube_rotation = 0
         hazard.sprite = Sprite(cube_image, hazard.x*xscale, hazard.y*yscale, hazard.rotation)
@@ -1177,7 +1177,7 @@ def update_sprite(self):
             self.sprite.rotation = self.rotation
 
 def make_sprite(self, image):
-    image = pygame.transform.smoothscale(image, (self.width*xscale, self.height*yscale))
+    image = pygame.transform.smoothscale(image, (round(self.width*xscale), round(self.height*yscale)))
     self.sprite = Sprite(image, self.x*xscale, self.y*yscale, self.rotation)
 
 def save_level_good(level_num):

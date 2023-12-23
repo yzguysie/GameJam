@@ -29,7 +29,7 @@ class button:
             self.update_image()
 
     def update_image(self):
-        self.image = pygame.transform.smoothscale(self.image_file, (self.width, self.height))
+        self.image = pygame.transform.smoothscale(self.image_file, (round(self.width), round(self.height)))
         
     def draw(self):
         if self.enabled:
