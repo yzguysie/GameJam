@@ -85,10 +85,18 @@ class Sprite():
         self.last_rotation = rotation
         self.target_rotation = rotation
         self.image = pygame.transform.rotate(self.ogimage, self.rotation)
+        self.centered = False
 
     def draw(self):
         self.image = pygame.transform.rotate(self.ogimage, self.rotation)
-        window.blit(self.image, (self.x, self.y))
+        if self.centered:
+            window.blit(self.image, (self.x-self.image.get_width()/2, self.y-self.image.get_height()/2))
+        else:
+            window.blit(self.image, (self.x, self.y))
+
+
+    def set_centered(self, centered):
+        self.centered = True
 
 
 class Player():
@@ -153,9 +161,13 @@ class Player():
         self.gravity = abs(self.gravity)
 
         # Clean this up - repeated code and loads every time player dies
+        self.set_sprite(player_default_image)
+
+    def set_sprite(self, image):
         cube_width, cube_height = round(self.width*xscale), round(self.height*yscale)
-        cube_image = pygame.transform.smoothscale(player_default_image, (cube_width, cube_height))
+        cube_image = pygame.transform.smoothscale(image, (cube_width, cube_height))
         self.sprite = Sprite(cube_image, self.x*xscale, self.y*yscale, self.rotation)
+        self.sprite.set_centered(True)
        
     def draw(self):
         self.do_rotation()
@@ -421,9 +433,8 @@ class Player():
             self.width = self.normwidth
             self.height = self.normheight
             self.mini = False
-        cube_width, cube_height = self.width*xscale, self.height*yscale
-        cube_image = pygame.transform.smoothscale(player_default_image, (cube_width, cube_height))
-        player.sprite = Sprite(cube_image, self.x*xscale, self.y*yscale, self.sprite.rotation)
+        
+        self.set_sprite(player_default_image)
 
 class Obstacle:
     def __init__(self, x, y, width, height):
@@ -865,10 +876,7 @@ def reload_buttons():
             buttons.append(jump_pad_button)
     # Clean this up - repeated code, loading image for each player
     for player in players:
-        cube_width, cube_height = round(player.width*xscale), round(player.height*yscale)
-        cube_image = pygame.transform.smoothscale(player_default_image, (cube_width, cube_height))
-        cube_rotation = 0
-        player.sprite = Sprite(cube_image, player.x*xscale, player.y*yscale, player.rotation)
+        player.set_sprite(player_default_image)
 
 level_num = 1
 player_count = 1
@@ -917,10 +925,7 @@ background_default_image = pygame.image.load("resources/images/GJ_Background.jpg
 menu_background_default_image = pygame.image.load("resources/images/GJ_Menu_Background.png")
 
 for player in players:
-    cube_width, cube_height = round(player.width*xscale), round(player.height*yscale)
-    cube_image = pygame.transform.smoothscale(player_default_image, (cube_width, cube_height))
-    cube_rotation = 0
-    player.sprite = Sprite(cube_image, player.x*xscale, player.y*yscale, player.rotation)
+    player.set_sprite(player_default_image)
 
 
 objects = []
@@ -1149,12 +1154,15 @@ def load_level(level_name):
     set_level(level)
 
     # Clean this up - repeated code
+    #reload_all_sprites() (clean up this should be used instead because its what youre doing but causes error because func def later)
     for hazard in hazards:
         make_sprite(hazard, hazard_default_image)
         update_sprite(hazard)
+        hazard.sprite.set_centered(True)
         
     for obstacle in obstacles:
         make_sprite(obstacle, obstacle_default_image)
+        obstacle.sprite.set_centered(True)
         
     for player in players:
         player.die()
@@ -1244,14 +1252,16 @@ def reload_all_sprites():
     global background
     global menu_background
     for player in players:
-        make_sprite(player, player_default_image)
+        player.set_sprite(player_default_image)
 
     for hazard in hazards:
         make_sprite(hazard, hazard_default_image)
+        hazard.sprite.set_centered(True)
 
 
     for obstacle in obstacles:
         make_sprite(obstacle, obstacle_default_image)
+        obstacle.sprite.set_centered(True)
 
     background = Sprite(pygame.transform.smoothscale(background_default_image, (screen_width, screen_height)), 0, 0, 0)
     menu_background = Sprite(pygame.transform.smoothscale(menu_background_default_image, (screen_width, screen_height)), 0, 0, 0)
