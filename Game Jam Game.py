@@ -609,7 +609,7 @@ class Portal:
 
         lowest = .5
         highest = 1
-        pygame.gfxdraw.aaellipse(window, round(((self.x-autoscroll_offset_x)+self.width/2)*xscale), round(((self.y-autoscroll_offset_y)+self.height/2)*yscale), round((self.width/2)*xscale), round((self.height/2)*yscale), self.color)
+        pygame.gfxdraw.aaellipse(window, round(((self.x-autoscroll_offset_x)-self.width/2)*xscale), round(((self.y-autoscroll_offset_y)+self.height/4)*yscale), round((self.width/2)*xscale), round((self.height/2)*yscale), self.color)
 
 
 class Level():
