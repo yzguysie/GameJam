@@ -763,7 +763,7 @@ def on_slot_clicked(slot):
     global loading_level
     
     if saving_level:
-        save_level_good(slot)
+        save_level_good(f'slot_{slot}')
         saving_level = False
     elif loading_level:
         load_level(f'slot_{slot}')
@@ -1195,18 +1195,18 @@ def make_sprite(self, image, centered):
     self.sprite = Sprite(image, self.x*xscale, self.y*yscale, self.rotation)
     self.sprite.set_centered(centered)
 
-def save_level_good(level_num):
+def save_level_good(level_name):
     config = ConfigParser()
     saved_level_data = save_level()
-    config['slot_'+str(level_num)] = {}
-    config['slot_'+str(level_num)]['level'] = saved_level_data
-    with open('resources/levels/slot_'+str(level_num)+'.ini', 'w') as configfile:
+    config[level_name] = {}
+    config[level_name]['level'] = saved_level_data
+    with open(f'resources/levels/{level_name}'+'.ini', 'w') as configfile:
         config.write(configfile)
 
 def save_all_levels(num):
     for i in range(1, num+1):
         load_level(f'slot_{i}')
-        save_level_good(i)
+        save_level_good(f'slot_{i}')
 
 def main_menu():
     global menu
@@ -1446,7 +1446,7 @@ while playing:
         saved_level_data = save_level()
         config['autosave'] = {}
         config['autosave']['level'] = saved_level_data
-        with open('autosave.ini', 'w') as configfile:
+        with open('resources/levels/autosave.ini', 'w') as configfile:
             config.write(configfile)
         print("Auto Saved level")
         print(frames+1)
@@ -1460,7 +1460,7 @@ while playing:
 saved_level_data = save_level()
 config['autosave'] = {}
 config['autosave']['level'] = saved_level_data
-with open('autosave.ini', 'w') as configfile:
+with open('resources/levels/autosave.ini', 'w') as configfile:
     config.write(configfile)
 print("Saved level")
 pygame.quit()
