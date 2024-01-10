@@ -29,8 +29,8 @@ screen_width, screen_height = 768, 432
 
 
 #MAKE "BUMP pads" that PUSH you like terracotta in minecraft (Like sideways jump pad or those thingies in edge)
-fps = 120
-tickrate = 120
+fps = 60
+tickrate = 60
 width = 1600
 height = 900
 
