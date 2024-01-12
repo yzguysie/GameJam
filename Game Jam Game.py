@@ -1019,8 +1019,8 @@ def get_objs_touching(objs, pos, amount):
     touching = []
     x, y = pos
     for obj in objs:
-        if x > obj.x-obj.width/2 and x < obj.x+obj.width/2:
-            if y > obj.y-obj.height/2 and y < obj.y+obj.height/2:
+        if x > obj.x and x < obj.x+obj.width:
+            if y > obj.y and y < obj.y+obj.height:
                 if amount == 1:
                     return obj
                 touching.append(obj)
