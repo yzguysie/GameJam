@@ -29,8 +29,8 @@ screen_width, screen_height = 768, 432
 
 
 #MAKE "BUMP pads" that PUSH you like terracotta in minecraft (Like sideways jump pad or those thingies in edge)
-fps = 60
-tickrate = 60
+fps = 120
+tickrate = 120
 width = 1600
 height = 900
 
@@ -168,9 +168,9 @@ class Player():
         self.set_sprite(player_default_image)
 
     def set_sprite(self, image):
-        cube_width, cube_height = round(self.width*xscale), round(self.height*yscale)
-        cube_image = pygame.transform.smoothscale(image, (cube_width, cube_height))
-        self.sprite = Sprite(cube_image, self.x*xscale, self.y*yscale, self.rotation)
+        sprite_width, sprite_height = round(self.width*xscale), round(self.height*yscale)
+        sprite_image = pygame.transform.smoothscale(image, (sprite_width, sprite_height))
+        self.sprite = Sprite(sprite_image, self.x*xscale, self.y*yscale, self.rotation)
         self.sprite.set_centered(True)
        
     def draw(self):
@@ -1177,11 +1177,11 @@ def load_level(level_name):
     #    print(f"Failed to load level {level_name}")
 
 
-def reload_hazard_sprite(hazard):
-        cube_width, cube_height = round(hazard.width*xscale), round(hazard.height*yscale)
-        cube_image = pygame.transform.scale(hazard_default_image, (cube_width, cube_height))
-        cube_rotation = 0
-        hazard.sprite = Sprite(cube_image, hazard.x*xscale, hazard.y*yscale, hazard.rotation)
+# def reload_hazard_sprite(hazard):
+#         cube_width, cube_height = round(hazard.width*xscale), round(hazard.height*yscale)
+#         cube_image = pygame.transform.scale(hazard_default_image, (cube_width, cube_height))
+#         cube_rotation = 0
+#         hazard.sprite = Sprite(cube_image, hazard.x*xscale, hazard.y*yscale, hazard.rotation)
 
 def update_sprite(self):
             self.sprite.x = (self.x-autoscroll_offset_x)*xscale
