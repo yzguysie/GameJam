@@ -96,11 +96,14 @@ class Sprite():
         if self.centered:
             window.blit(self.image, (self.x-self.image.get_width()/2, self.y-self.image.get_height()/2))
         else:
-            window.blit(self.image, (self.x, self.y))
+            x_offset = (self.image.get_width()-self.ogimage.get_width())/2
+            y_offset = (self.image.get_height()-self.ogimage.get_height())/2
+            window.blit(self.image, (self.x-x_offset, self.y-y_offset))
+        
 
 
     def set_centered(self, centered):
-        self.centered = True
+        self.centered = centered
 
 
 class Player():
@@ -168,10 +171,11 @@ class Player():
         self.set_sprite(player_default_image)
 
     def set_sprite(self, image):
+        #Clean this up - does same thing as make_sprite
         sprite_width, sprite_height = round(self.width*xscale), round(self.height*yscale)
         sprite_image = pygame.transform.smoothscale(image, (sprite_width, sprite_height))
         self.sprite = Sprite(sprite_image, self.x*xscale, self.y*yscale, self.rotation)
-        self.sprite.set_centered(True)
+        self.sprite.set_centered(False)
        
     def draw(self):
         self.do_rotation()
@@ -995,16 +999,12 @@ def get_grid_pos(pos):
     global grid_width
     global grid_height
     x, y = pos
-    x = x+grid_width/2
-    y = y+grid_height/2
     return x - x%grid_width, y - y%grid_height
     #y = y - y%grid_height
     #return x, y
 
 def get_special_grid_pos(pos, sp_width, sp_height):
     x, y = pos
-    x = x+sp_width/2
-    y = y+sp_height/2
     return x - x%sp_width, y - y%sp_height
         
 
@@ -1081,7 +1081,7 @@ def make_new_object(id_, pos):
         x, y = get_grid_pos(pos)
         new_obstacle = Obstacle(x ,y, grid_width, grid_height)
         if obstacle_sprite:
-            make_sprite(new_obstacle, obstacle_default_image, True)
+            make_sprite(new_obstacle, obstacle_default_image)
         obstacles.append(new_obstacle)
         objects.append(new_obstacle)
 
@@ -1089,7 +1089,7 @@ def make_new_object(id_, pos):
         x, y = get_grid_pos(pos)
         new_spike = Hazard(x, y, grid_width, grid_height)
         if hazard_sprite:
-            make_sprite(new_spike, hazard_default_image, True)
+            make_sprite(new_spike, hazard_default_image)
         hazards.append(new_spike)
         objects.append(new_spike)
 
@@ -1121,7 +1121,7 @@ def make_new_object(id_, pos):
         x, y = get_special_grid_pos(pos, grid_width, grid_height/2)
         new_obstacle = Obstacle(x ,y, grid_width, grid_height/2)
         if obstacle_sprite:
-            make_sprite(new_obstacle, obstacle_default_image, True)
+            make_sprite(new_obstacle, obstacle_default_image)
         obstacles.append(new_obstacle)
         objects.append(new_obstacle)
 
@@ -1129,7 +1129,7 @@ def make_new_object(id_, pos):
         x, y = get_special_grid_pos(pos, grid_width/2, grid_height/2)
         new_obstacle = Obstacle(x ,y, grid_width/2, grid_height/2)
         if obstacle_sprite:
-            make_sprite(new_obstacle, obstacle_default_image, True)
+            make_sprite(new_obstacle, obstacle_default_image)
         obstacles.append(new_obstacle)
         objects.append(new_obstacle)
 
@@ -1163,12 +1163,12 @@ def load_level(level_name):
     # Clean this up - repeated code
     #reload_all_sprites() (clean up this should be used instead because its what youre doing but causes error because func def later)
     for hazard in hazards:
-        make_sprite(hazard, hazard_default_image, True)
+        make_sprite(hazard, hazard_default_image)
         update_sprite(hazard)
 
         
     for obstacle in obstacles:
-        make_sprite(obstacle, obstacle_default_image, True)
+        make_sprite(obstacle, obstacle_default_image)
         
     for player in players:
         player.die()
@@ -1190,7 +1190,7 @@ def update_sprite(self):
             self.sprite.height = self.height*yscale
             self.sprite.rotation = self.rotation
 
-def make_sprite(self, image, centered):
+def make_sprite(self, image, centered=False):
     image = pygame.transform.smoothscale(image, (round(self.width*xscale), round(self.height*yscale)))
     self.sprite = Sprite(image, self.x*xscale, self.y*yscale, self.rotation)
     self.sprite.set_centered(centered)
@@ -1262,11 +1262,11 @@ def reload_all_sprites():
         player.set_sprite(player_default_image)
 
     for hazard in hazards:
-        make_sprite(hazard, hazard_default_image, True)
+        make_sprite(hazard, hazard_default_image)
 
 
     for obstacle in obstacles:
-        make_sprite(obstacle, obstacle_default_image, True)
+        make_sprite(obstacle, obstacle_default_image)
 
     background = Sprite(pygame.transform.smoothscale(background_default_image, (screen_width, screen_height)), 0, 0, 0)
     menu_background = Sprite(pygame.transform.smoothscale(menu_background_default_image, (screen_width, screen_height)), 0, 0, 0)
