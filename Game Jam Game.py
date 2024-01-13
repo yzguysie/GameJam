@@ -601,6 +601,9 @@ class Portal:
         return False
 
     def draw(self):
+        update_sprite(self)
+        self.sprite.draw()
+        return
         if show_hitboxes:
             pygame.gfxdraw.rectangle(window, (round((self.x-autoscroll_offset_x)*xscale), round((self.y-autoscroll_offset_y)*yscale), round(self.width*xscale), round(self.height*yscale)), red)
 
@@ -613,7 +616,7 @@ class Portal:
 
         lowest = .5
         highest = 1
-        pygame.gfxdraw.aaellipse(window, round(((self.x-autoscroll_offset_x)-self.width/2)*xscale), round(((self.y-autoscroll_offset_y)+self.height/4)*yscale), round((self.width/2)*xscale), round((self.height/2)*yscale), self.color)
+        pygame.gfxdraw.aaellipse(window, round(((self.x-autoscroll_offset_x))*xscale), round(((self.y-autoscroll_offset_y))*yscale), round((self.width/2)*xscale), round((self.height/2)*yscale), self.color)
 
 
 class Level():
@@ -931,6 +934,7 @@ hazard_default_image = pygame.image.load("resources/images/Larimore_icespike.png
 obstacle_default_image = pygame.image.load("resources/images/Larimore_block.png")
 background_default_image = pygame.image.load("resources/images/GJ_Background.jpg")
 menu_background_default_image = pygame.image.load("resources/images/GJ_Menu_Background.png")
+portal_default_image = pygame.image.load("resources/images/blue_portal.png")
 
 for player in players:
     player.set_sprite(player_default_image)
@@ -1096,24 +1100,28 @@ def make_new_object(id_, pos):
     if id_ == YELLOW_PORTAL:
         x, y = get_grid_pos(pos)
         new_portal = Portal(x, y, grid_width/2, grid_height*2, 1)
+        make_sprite(new_portal, portal_default_image)
         portals.append(new_portal)
         objects.append(new_portal)
 
     if id_ == BLUE_PORTAL:
         x, y = get_grid_pos(pos)
         new_portal = Portal(x, y, grid_width/2, grid_height*2, 2)
+        make_sprite(new_portal, portal_default_image)
         portals.append(new_portal)
         objects.append(new_portal)
 
     if id_ == NORMAL_PORTAL:
         x, y = get_grid_pos(pos)
         new_portal = Portal(x, y, grid_width/2, grid_height*2, 3)
+        make_sprite(new_portal, portal_default_image)
         portals.append(new_portal)
         objects.append(new_portal)
 
     if id_ == MINI_PORTAL:
         x, y = get_grid_pos(pos)
         new_portal = Portal(x, y, grid_width/2, grid_height*2, 4)
+        make_sprite(new_portal, portal_default_image)
         portals.append(new_portal)
         objects.append(new_portal)
 
@@ -1142,6 +1150,7 @@ def make_new_object(id_, pos):
     if id_ == END_PORTAL:
         x, y = get_grid_pos(pos)
         new_portal = Portal(x, y, grid_width/2, grid_height*2, 6)
+        make_sprite(new_portal, portal_default_image)
         portals.append(new_portal)
         objects.append(new_portal)
         
@@ -1169,6 +1178,9 @@ def load_level(level_name):
         
     for obstacle in obstacles:
         make_sprite(obstacle, obstacle_default_image)
+
+    for portal in portals:
+        make_sprite(portal, portal_default_image)
         
     for player in players:
         player.die()
