@@ -106,6 +106,19 @@ class Sprite():
         self.centered = centered
 
 
+def make_sprite(self, image, centered=False):
+    image = pygame.transform.smoothscale(image, (round(self.width*xscale), round(self.height*yscale)))
+    self.sprite = Sprite(image, self.x*xscale, self.y*yscale, self.rotation)
+    self.sprite.set_centered(centered)
+
+def update_sprite(self):
+            self.sprite.x = (self.x-autoscroll_offset_x)*xscale
+            self.sprite.y = (self.y-autoscroll_offset_y)*yscale
+            self.sprite.width = self.width*xscale
+            self.sprite.height = self.height*yscale
+            self.sprite.rotation = self.rotation
+
+
 class Player():
     def __init__(self):
         self.x = 0  # consider x and y combined with a position struct, self.pos.x, self.pos.y
@@ -168,14 +181,14 @@ class Player():
         self.gravity = abs(self.gravity)
 
         # Clean this up - repeated code and loads every time player dies
-        self.set_sprite(player_default_image)
+        make_sprite(self, player_default_image)
 
-    def set_sprite(self, image):
-        #Clean this up - does same thing as make_sprite
-        sprite_width, sprite_height = round(self.width*xscale), round(self.height*yscale)
-        sprite_image = pygame.transform.smoothscale(image, (sprite_width, sprite_height))
-        self.sprite = Sprite(sprite_image, self.x*xscale, self.y*yscale, self.rotation)
-        self.sprite.set_centered(False)
+    # def set_sprite(self, image):
+    #     #Clean this up - does same thing as make_sprite
+    #     sprite_width, sprite_height = round(self.width*xscale), round(self.height*yscale)
+    #     sprite_image = pygame.transform.smoothscale(image, (sprite_width, sprite_height))
+    #     self.sprite = Sprite(sprite_image, self.x*xscale, self.y*yscale, self.rotation)
+    #     self.sprite.set_centered(False)
        
     def draw(self):
         self.do_rotation()
@@ -442,7 +455,7 @@ class Player():
             self.height = self.normheight
             self.mini = False
         
-        self.set_sprite(player_default_image)
+        self.make_sprite(player_default_image)
 
 class Obstacle:
     def __init__(self, x, y, width, height):
@@ -456,8 +469,10 @@ class Obstacle:
         self.costume = 0
 
     def __repr__(self):
-        split_character = "@"
-        return str(self.x) + split_character + str(self.y) + split_character + str(self.width) + split_character + str(self.height) + split_character + str(self.rotation) + split_character + str(self.costume) + split_character + str(self.color) + split_character + str(self.outline_color) 
+        info = [str(self.x), str(self.y), str(self.width), str(self.height), str(self.rotation), str(self.costume), str(self.color), str(self.outline_color)]
+        return "@".join(info)
+        # split_character = "@"
+        # return str(self.x) + split_character + str(self.y) + split_character + str(self.width) + split_character + str(self.height) + split_character + str(self.rotation) + split_character + str(self.costume) + split_character + str(self.color) + split_character + str(self.outline_color) 
 
     def draw(self):
         if obstacle_sprite:
@@ -488,8 +503,11 @@ class Hazard:
 
     def __repr__(self):
         # Clean this up - repeated code and what is f (should put into func)
-        f = "@"
-        return str(self.x) + f + str(self.y) + f + str(self.width) + f + str(self.height) + f + str(self.rotation) + f + str(self.type) + f + str(self.color)
+        info = [str(self.x), str(self.y), str(self.width), str(self.height), str(self.rotation), str(self.type), str(self.color)]
+        return "@".join(info)
+
+        # f = "@"
+        # return str(self.x) + f + str(self.y) + f + str(self.width) + f + str(self.height) + f + str(self.rotation) + f + str(self.type) + f + str(self.color)
     
     def draw(self):
         if show_hitboxes:
@@ -528,6 +546,9 @@ class Portal:
         self.mode = type_
         self.contacting = False
         self.rotation = 0
+
+
+        #clean this up: make every portal type have a image which goes in a list called ex. images and self.sprite = Sprite(images[mode])
         if self.mode == 0:
             self.color = gray
 
@@ -554,8 +575,10 @@ class Portal:
 
     def __repr__(self):
         # Clean this up - unreadable (what is f)
-        f = "@"
-        return str(self.x) + f + str(self.y) + f + str(self.width) + f + str(self.height) + f + str(self.mode) + f + str(self.rotation)
+        info = [str(self.x), str(self.y), str(self.width), str(self.height), str(self.mode), str(self.rotation)]
+        return "@".join(info)
+        # f = "@"
+        # return str(self.x) + f + str(self.y) + f + str(self.width) + f + str(self.height) + f + str(self.mode) + f + str(self.rotation)
 
     def apply(self, player):
         if self.mode == 1:
@@ -887,7 +910,7 @@ def reload_buttons():
             buttons.append(jump_pad_button)
     # Clean this up - repeated code, loading image for each player
     for player in players:
-        player.set_sprite(player_default_image)
+        make_sprite(player, player_default_image)
 
 level_num = 1
 player_count = 1
@@ -937,7 +960,7 @@ menu_background_default_image = pygame.image.load("resources/images/GJ_Menu_Back
 portal_default_image = pygame.image.load("resources/images/blue_portal.png")
 
 for player in players:
-    player.set_sprite(player_default_image)
+    make_sprite(player, player_default_image)
 
 
 objects = []
@@ -1195,17 +1218,7 @@ def load_level(level_name):
 #         cube_rotation = 0
 #         hazard.sprite = Sprite(cube_image, hazard.x*xscale, hazard.y*yscale, hazard.rotation)
 
-def update_sprite(self):
-            self.sprite.x = (self.x-autoscroll_offset_x)*xscale
-            self.sprite.y = (self.y-autoscroll_offset_y)*yscale
-            self.sprite.width = self.width*xscale
-            self.sprite.height = self.height*yscale
-            self.sprite.rotation = self.rotation
 
-def make_sprite(self, image, centered=False):
-    image = pygame.transform.smoothscale(image, (round(self.width*xscale), round(self.height*yscale)))
-    self.sprite = Sprite(image, self.x*xscale, self.y*yscale, self.rotation)
-    self.sprite.set_centered(centered)
 
 def save_level_good(level_name):
     config = ConfigParser()
@@ -1271,7 +1284,7 @@ def reload_all_sprites():
     global background
     global menu_background
     for player in players:
-        player.set_sprite(player_default_image)
+        make_sprite(player, player_default_image)
 
     for hazard in hazards:
         make_sprite(hazard, hazard_default_image)
