@@ -455,7 +455,7 @@ class Player():
             self.height = self.normheight
             self.mini = False
         
-        self.make_sprite(player_default_image)
+        make_sprite(self, player_default_image)
 
 class Obstacle:
     def __init__(self, x, y, width, height):
