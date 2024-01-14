@@ -150,8 +150,7 @@ class text_box:
         
 
 class menu:
-    def __init__(self, surface, x, y, width, height, columns, rows):
-        self.surface = surface
+    def __init__(self, x, y, width, height, columns, rows):
         self.x = x
         self.y = y
         self.width = width
@@ -180,17 +179,17 @@ class menu:
         button.update_image()
         self.buttons.append(button)
 
-    def draw(self):
+    def draw(self, surface):
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
-        pygame.draw.rect(self.surface, self.color, self.rect)
+        pygame.draw.rect(surface, self.color, self.rect)
         for button in self.buttons:
-            button.draw()
+            button.draw(surface)
 
     def tick(self):
-        if self.enabled:
-            self.draw()
-            for button in self.buttons:
-                button.get_clicked()
+        # if self.enabled:
+        #     self.draw()
+        for button in self.buttons:
+            button.get_clicked()
     
 class slider:
     def __init__(self, surface, x, y, width, height, minimum, maximum, step_amount, text, slider_pos, color, border_color, text_color, slider_color, slide_color, slide_color_dark, onclick=None):

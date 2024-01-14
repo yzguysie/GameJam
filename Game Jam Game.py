@@ -868,11 +868,7 @@ def mouse_over_anything():
 
 buttons = []
 
-# ex_menu = ui.menu(window, 50, 90, 100, 100, 3, 5)
-# for i in range(ex_menu.rows*ex_menu.columns-1):
-#     ex_menu.add_button(ui.button(0, 0, 0, 0, f"{i}", partial(example_func, i), player_default_image))
 
-#menus.append(ex_menu)
 
 # button_width = round(screen_width/20)
 # button_height = round(screen_height/30)
@@ -1097,6 +1093,7 @@ def reload_all_sprites():
 class Game:
     def __init__(self):
         global screen_width, screen_height
+        #self.screen_width, self.screen_height = 768, 432
         self.playing = True
         self.in_menu = True
         self.window = pygame.display.set_mode([screen_width, screen_height], pygame.RESIZABLE)
@@ -1104,7 +1101,26 @@ class Game:
         self.clock = pygame.time.Clock()
         self.menus = []
         self.level = Level()
+        ex_menu = ui.menu(50, 90, 100, 100, 3, 5)
+        for i in range(ex_menu.rows*ex_menu.columns):
+            ex_menu.add_button(ui.button(0, 0, 0, 0, f"{i}", partial(example_func, i), player_default_image))
 
+        self.menus.append(ex_menu)
+
+
+    def check_window_resize(self):
+        global screen_width, screen_height
+        global xscale, yscale, real_xscale
+        if screen_width != pygame.display.get_surface().get_width() or screen_height != pygame.display.get_surface().get_height():
+                
+            screen_width = pygame.display.get_surface().get_width()
+            screen_height = pygame.display.get_surface().get_height()
+            xscale = screen_width/width
+            real_xscale = screen_width/width
+            yscale = screen_height/height
+            xscale = yscale
+            self.reload_buttons()
+            reload_all_sprites()
     def reload_buttons(self):
         global players
         global buttons
@@ -1331,16 +1347,7 @@ class Game:
         global autoscroll_offset_x, autoscroll_offset_y
 
         while self.playing:
-            if screen_width != pygame.display.get_surface().get_width() or screen_height != pygame.display.get_surface().get_height():
-                
-                screen_width = pygame.display.get_surface().get_width()
-                screen_height = pygame.display.get_surface().get_height()
-                xscale = screen_width/width
-                real_xscale = screen_width/width
-                yscale = screen_height/height
-                xscale = yscale
-                self.reload_buttons()
-                reload_all_sprites()
+            self.check_window_resize()
                 
             if self.in_menu:
                 self.main_menu()
@@ -1400,6 +1407,7 @@ class Game:
 
             for menu in self.menus:
                 menu.tick()
+                menu.draw(self.window)
 
             for box in text_boxes:
                 box.events = events
