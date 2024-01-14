@@ -3,8 +3,7 @@ import math
 pygame.init()
 
 class button:
-    def __init__(self, surface, x, y, width, height, text, onclick=None, image_file=None):
-        self.surface = surface
+    def __init__(self, x, y, width, height, text, onclick=None, image_file=None):
         self.x = x
         self.y = y
         self.width = width
@@ -31,15 +30,15 @@ class button:
     def update_image(self):
         self.image = pygame.transform.smoothscale(self.image_file, (round(self.width), round(self.height)))
         
-    def draw(self):
+    def draw(self, surface):
         if self.enabled:
             if self.image:
-                self.surface.blit(self.image, (self.x, self.y))
+                surface.blit(self.image, (self.x, self.y))
                 return
             self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
-            pygame.draw.rect(self.surface, self.color, self.rect)
-            pygame.draw.rect(self.surface, self.border_color, self.rect, round(min(self.width, self.height)/25))
-            self.surface.blit(self.disp_text, (self.rect[0], self.rect[1]))
+            pygame.draw.rect(surface, self.color, self.rect)
+            pygame.draw.rect(surface, self.border_color, self.rect, round(min(self.width, self.height)/25))
+            surface.blit(self.disp_text, (self.rect[0], self.rect[1]))
             
     def update(self):
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
