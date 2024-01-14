@@ -88,7 +88,6 @@ autoscroll_smoothness = fps/15
 autoscroll_offset_x = 0
 autoscroll_offset_y = 0
 
-player_circle = False
 world_height_limit = -5000
 class Sprite():
     def __init__(self, image, x, y, rotation):
@@ -160,7 +159,6 @@ class Player():
         # self.image = sprite()
 
     def die(self):
-        global player_random
         #self.gravity = abs(self.gravity)
         self.x = 0
         self.y = height-self.height
@@ -171,23 +169,6 @@ class Player():
         self.mini = False
         self.on_ground = False
         self.holding_jump = False
-        if player_random and False:
-            if self in players:
-                players.remove(self)
-            player = Player()
-            player.color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-            player.width = (random.randint(10, 50))
-            player.height = (random.randint(10, 50))
-            player.normwidth = player.width
-            player.normheight = player.height
-            player.miniwidth = player.width/math.sqrt(2)
-            player.miniheight = player.height/math.sqrt(2)
-            player.jump_height = random.randint(17, 30)
-            player.mini_jump_height = player.jump_height/1.2
-            player.max_speed_x = random.uniform(5, 20)
-            player.max_speed_y = random.uniform(10, 50)
-            player.acceleration = random.uniform(.5, 2)
-            players.append(player)
         self.gravity = abs(self.gravity)
 
         # Clean this up - repeated code and loads every time player dies
@@ -653,17 +634,14 @@ class Portal:
 
 
 class Level():
-    def __init__(self, data):
-        #print("Attempting to load: " + data)
-        #try:
-            if data == "":
-                self.player = Player()
-                self.obstacles = []
-                self.hazards = []
-                self.portals = []
-                self.objects = []
-                return
+    def __init__(self):
+        self.player = Player()
+        self.obstacles = []
+        self.hazards = []
+        self.portals = []
 
+    def load(self, data):
+        #try:
             data = data.split("|")
             player_data = data[0].split(" ")
             obstacle_data = data[1].split("/")
@@ -710,9 +688,6 @@ class Level():
                         new_portal.rotation = float(portal[5])
                     self.portals.append(new_portal)
 
-            self.objects = []
-            self.objects = self.obstacles+self.hazards+self.portals
-
             #print(str(data) + " loaded.")
         
         #except:
@@ -732,8 +707,6 @@ def set_level(level):
         hazards = level.hazards
 
         portals = level.portals
-
-        objects = level.objects
 
     except:
         print("Level corrupted")
@@ -803,7 +776,7 @@ def set_saving_loading(saving, loading):
 
 level_num = 1
 player_count = 1
-player_random = False
+#player_random = False
 
 gravity = 1.15
 gamespeed = 60/tickrate
@@ -818,26 +791,26 @@ players = []
 
 for i in range(player_count):
     player = Player()
-    if (player_random) and i % 2 == 1:
-        player.gravity = -player.gravity
-    if player_random:
-        player.gravity *= random.uniform(0, 2)
-        while player.gravity == 0:
-            player.gravity *= random.uniform(0, 2)
+    # if (player_random) and i % 2 == 1:
+    #     player.gravity = -player.gravity
+    # if player_random:
+    #     player.gravity *= random.uniform(0, 2)
+    #     while player.gravity == 0:
+    #         player.gravity *= random.uniform(0, 2)
         
-        player.x += i
-        player.color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-        player.width = (random.randint(10, 50))
-        player.height = (random.randint(10, 50))
-        player.normwidth = player.width
-        player.normheight = player.height
-        player.miniwidth = player.width/math.sqrt(2)
-        player.miniheight = player.height/math.sqrt(2)
-        player.jump_height = random.randint(17, 30)
-        player.mini_jump_height = player.jump_height/1.2
-        player.max_speed_x = random.uniform(5, 20)
-        player.max_speed_y = random.uniform(10, 50)
-        player.acceleration = random.uniform(.5, 2)
+    #     player.x += i
+    #     player.color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+    #     player.width = (random.randint(10, 50))
+    #     player.height = (random.randint(10, 50))
+    #     player.normwidth = player.width
+    #     player.normheight = player.height
+    #     player.miniwidth = player.width/math.sqrt(2)
+    #     player.miniheight = player.height/math.sqrt(2)
+    #     player.jump_height = random.randint(17, 30)
+    #     player.mini_jump_height = player.jump_height/1.2
+    #     player.max_speed_x = random.uniform(5, 20)
+    #     player.max_speed_y = random.uniform(10, 50)
+    #     player.acceleration = random.uniform(.5, 2)
 
     players.append(player)
 
@@ -852,10 +825,17 @@ for player in players:
     make_sprite(player, player_default_image)
 
 
-objects = []
 obstacles = []
 hazards = []
 portals = []
+
+def all_objects():
+    for o in obstacles:
+        yield o
+    for h in hazards:
+        yield h
+    for p in portals:
+        yield p
 
 objects_editing = []
 
@@ -888,18 +868,14 @@ def mouse_over_anything():
 
 buttons = []
 
-menus = []
-
 # ex_menu = ui.menu(window, 50, 90, 100, 100, 3, 5)
 # for i in range(ex_menu.rows*ex_menu.columns-1):
 #     ex_menu.add_button(ui.button(0, 0, 0, 0, f"{i}", partial(example_func, i), player_default_image))
 
 #menus.append(ex_menu)
 
-button_width = round(screen_width/20)
-button_height    = round(screen_height/30)
-
-
+# button_width = round(screen_width/20)
+# button_height = round(screen_height/30)
 
 sliders = []
 
@@ -950,24 +926,11 @@ def delete_touching(pos):
     if obj:
         if isinstance(obj, Obstacle):
             obstacles.remove(obj)
-            objects.remove(obj)
         elif isinstance(obj, Hazard):
             hazards.remove(obj)
-            objects.remove(obj)
         elif isinstance(obj, Portal):
             portals.remove(obj)
-            objects.remove(obj)
 
-#clean this up - unused func
-def rotate_touching(pos):
-    obj = get_objs_touching(obstacles, pos, 1)
-    if obj:
-        obj.rotation += 90
-        obj.rotation %= 360
-    obj = get_objs_touching(hazards, pos, 1)
-    if obj:
-        obj.rotation += 90
-        obj.rotation %= 360
     
 def make_new_object(id_, pos):
     global objects_editing
@@ -997,7 +960,6 @@ def make_new_object(id_, pos):
         if obstacle_sprite:
             make_sprite(new_obstacle, obstacle_default_image)
         obstacles.append(new_obstacle)
-        objects.append(new_obstacle)
 
     if id_ == ObjectType.SPIKE:
         x, y = get_grid_pos(pos)
@@ -1005,35 +967,30 @@ def make_new_object(id_, pos):
         if hazard_sprite:
             make_sprite(new_spike, hazard_default_image)
         hazards.append(new_spike)
-        objects.append(new_spike)
 
     if id_ == ObjectType.YELLOW_PORTAL:
         x, y = get_grid_pos(pos)
         new_portal = Portal(x, y, grid_width/2, grid_height*2, 1)
         make_sprite(new_portal, portal_default_image)
         portals.append(new_portal)
-        objects.append(new_portal)
 
     if id_ == ObjectType.BLUE_PORTAL:
         x, y = get_grid_pos(pos)
         new_portal = Portal(x, y, grid_width/2, grid_height*2, 2)
         make_sprite(new_portal, portal_default_image)
         portals.append(new_portal)
-        objects.append(new_portal)
 
     if id_ == ObjectType.NORMAL_PORTAL:
         x, y = get_grid_pos(pos)
         new_portal = Portal(x, y, grid_width/2, grid_height*2, 3)
         make_sprite(new_portal, portal_default_image)
         portals.append(new_portal)
-        objects.append(new_portal)
 
     if id_ == ObjectType.MINI_PORTAL:
         x, y = get_grid_pos(pos)
         new_portal = Portal(x, y, grid_width/2, grid_height*2, 4)
         make_sprite(new_portal, portal_default_image)
         portals.append(new_portal)
-        objects.append(new_portal)
 
     if id_ == ObjectType.SLAB:
         x, y = get_special_grid_pos(pos, grid_width, grid_height/2)
@@ -1041,7 +998,6 @@ def make_new_object(id_, pos):
         if obstacle_sprite:
             make_sprite(new_obstacle, obstacle_default_image)
         obstacles.append(new_obstacle)
-        objects.append(new_obstacle)
 
     if id_ == ObjectType.MINI_BLOCK:
         x, y = get_special_grid_pos(pos, grid_width/2, grid_height/2)
@@ -1049,20 +1005,17 @@ def make_new_object(id_, pos):
         if obstacle_sprite:
             make_sprite(new_obstacle, obstacle_default_image)
         obstacles.append(new_obstacle)
-        objects.append(new_obstacle)
 
     if id_ == ObjectType.JUMP_PAD:
         x, y = get_special_grid_pos(pos, grid_width, grid_height/2)
         new_portal = Portal(x, y, grid_width, grid_height/2, 5)
         portals.append(new_portal)
-        objects.append(new_portal)
 
     if id_ == ObjectType.END_PORTAL:
         x, y = get_grid_pos(pos)
         new_portal = Portal(x, y, grid_width/2, grid_height*2, 6)
         make_sprite(new_portal, portal_default_image)
         portals.append(new_portal)
-        objects.append(new_portal)
         
 
 
@@ -1076,7 +1029,8 @@ def load_level(level_name):
     file_name = f'resources/levels/{level_name}.ini'
     config.read(file_name)
     saved_level_data = config.get((level_name), ('level'))
-    level = Level(saved_level_data)
+    level = Level()
+    level.load(saved_level_data)
     set_level(level)
 
     # Clean this up - repeated code
@@ -1144,10 +1098,12 @@ class Game:
     def __init__(self):
         global screen_width, screen_height
         self.playing = True
-        self.menu = True
+        self.in_menu = True
         self.window = pygame.display.set_mode([screen_width, screen_height], pygame.RESIZABLE)
         self.reload_buttons()
         self.clock = pygame.time.Clock()
+        self.menus = []
+        self.level = Level()
 
     def reload_buttons(self):
         global players
@@ -1157,18 +1113,7 @@ class Game:
         global load_button
         global reset_button
 
-        global slot_1_button
-        global slot_2_button
-        global slot_3_button
-        global slot_4_button
-        global slot_5_button
-        global slot_6_button
-        global slot_7_button
-        global slot_8_button
-        global slot_9_button
-        global slot_10_button
         global recover_button
-
 
         global menu_buttons
         global play_button
@@ -1204,7 +1149,7 @@ class Game:
         if True:
             save_button = ui.button(screen_width-button_width*2, 0, button_width, button_height, "save", partial(set_saving_loading, True, False))
             load_button = ui.button(screen_width-button_width, 0, button_width, button_height, "load", partial(set_saving_loading, False, True))
-            reset_button = ui.button(screen_width-button_width*2, button_height, button_width, button_height, "reset", partial(set_level, Level("")))
+            reset_button = ui.button(screen_width-button_width*2, button_height, button_width, button_height, "reset", partial(set_level, Level()))
             delete_button = ui.button(0, (button_height+5), button_width, button_height, "delete", partial(set_selected_object, ObjectType.DELETE))
             block_button = ui.button((button_width+5)*0, (button_height+5)*2, button_width, button_height, "block", partial(set_selected_object, ObjectType.BLOCK))
             slab_button = ui.button((button_width+5)*1, (button_height+5)*2, button_width, button_height, "slab", partial(set_selected_object, ObjectType.SLAB))
@@ -1231,7 +1176,7 @@ class Game:
                 if editing:
                     buttons.append(new_button)
 
-            recover_button = ui.button(screen_width-button_width, button_height, button_width, button_height, "Recover")
+            recover_button = ui.button(screen_width-button_width, button_height, button_width, button_height, "Recover", partial(load_level, 'autosave'))
 
             if editing:
                 buttons.append(save_button)
@@ -1262,12 +1207,12 @@ class Game:
         events = pygame.event.get()
         for event in events:
             if event.type == pygame.QUIT:
-                self.menu = False
+                self.in_menu = False
                 self.playing = False
                 break
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    self.menu = False
+                    self.in_menu = False
                     self.playing = False
                     break
                 
@@ -1278,7 +1223,7 @@ class Game:
                 if button == play_button:
                     editing = False
                     self.playing = True
-                    self.menu = False
+                    self.in_menu = False
                     self.reload_buttons()
                     
                 elif button == options_button:
@@ -1287,16 +1232,97 @@ class Game:
                 elif button == editor_button:
                     editing = True
                     self.playing = True
-                    self.menu = False
+                    self.in_menu = False
                     self.reload_buttons()
 
                 elif button == quit_button:
-                    self.menu = False
+                    self.in_menu = False
                     self.playing = False
                     break
 
         pygame.display.flip()
         self.clock.tick(fps)
+    
+    def handle_events(self, events):
+        mouse_pos = get_mouse_pos()
+        for event in events:
+            #global saving_level
+            if event.type == pygame.QUIT:
+                self.playing = False
+                break
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    self.in_menu = True
+                    #self.playing = False
+                    break
+            
+
+                elif event.key == pygame.K_RETURN:
+                    save_all_levels(num_levels)
+
+                if editing:
+                    # if event.key == pygame.K_s:
+                    #     saving_level = True
+                    if event.key == pygame.K_w:
+                        for obj in objects_editing:
+                            obj.y -= grid_height  
+
+                    elif event.key == pygame.K_a:
+                        for obj in objects_editing:
+                            obj.x -= grid_width   
+
+                    elif event.key == pygame.K_s:
+                        for obj in objects_editing:
+                            obj.y += grid_height
+
+                    elif event.key == pygame.K_d:
+                        for obj in objects_editing:
+                            obj.x += grid_width
+                
+                    # elif event.key == pygame.K_l:
+                    #     loading_level = True
+                        
+
+                        
+                    # Clean this up - put keys and their actions into lists and get indexof key which corresponds to indexof action
+                    elif event.key == pygame.K_0:
+                        make_new_object(ObjectType.DELETE, mouse_pos)
+
+                    elif event.key == pygame.K_1:
+                        make_new_object(ObjectType.BLOCK, mouse_pos)                
+
+                    elif event.key == pygame.K_2:
+                        make_new_object(ObjectType.SPIKE, mouse_pos)
+
+                    elif event.key == pygame.K_3:
+                        make_new_object(ObjectType.BLUE_PORTAL, mouse_pos)
+
+                    elif event.key == pygame.K_4:
+                        make_new_object(ObjectType.YELLOW_PORTAL, mouse_pos)
+
+                    elif event.key == pygame.K_5:
+                        make_new_object(ObjectType.NORMAL_PORTAL, mouse_pos)
+
+                    elif event.key == pygame.K_6:
+                        make_new_object(ObjectType.MINI_PORTAL, mouse_pos)
+
+                    elif event.key == pygame.K_7:
+                        make_new_object(ObjectType.SLAB, mouse_pos)
+
+                    elif event.key == pygame.K_8:
+                        make_new_object(ObjectType.END_PORTAL, mouse_pos)
+
+                    elif event.key == pygame.K_9:
+                        make_new_object(ObjectType.SELECT, mouse_pos)
+                        
+                    elif event.key == pygame.K_r:
+                        for obj in objects_editing:
+                            obj.rotation += 90
+                            obj.rotation %= 360
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if not mouse_over_anything() and editing:
+                    make_new_object(selected, mouse_pos)
 
     def play(self):
         global xscale, yscale, real_xscale 
@@ -1316,7 +1342,7 @@ class Game:
                 self.reload_buttons()
                 reload_all_sprites()
                 
-            if self.menu:
+            if self.in_menu:
                 self.main_menu()
                 continue
 
@@ -1332,102 +1358,22 @@ class Game:
                 load_new_level = False
         
             events = pygame.event.get()
-            for event in events:
-                #global saving_level
-                if event.type == pygame.QUIT:
-                    self.playing = False
-                    break
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        self.menu = True
-                        #self.playing = False
-                        break
-                
-
-                    elif event.key == pygame.K_RETURN:
-                        save_all_levels(num_levels)
-
-                    if editing:
-                        # if event.key == pygame.K_s:
-                        #     saving_level = True
-                        if event.key == pygame.K_w:
-                            for obj in objects_editing:
-                                obj.y -= grid_height  
-
-                        elif event.key == pygame.K_a:
-                            for obj in objects_editing:
-                                obj.x -= grid_width   
-
-                        elif event.key == pygame.K_s:
-                            for obj in objects_editing:
-                                obj.y += grid_height
-
-                        elif event.key == pygame.K_d:
-                            for obj in objects_editing:
-                                obj.x += grid_width
-                    
-                        elif event.key == pygame.K_l:
-                            loading_level = True
-                            
-
-                        elif event.key == pygame.K_c:
-                            player_circle = not player_circle
-                            
-                        # Clean this up - put keys and their actions into lists and get indexof key which corresponds to indexof action
-                        elif event.key == pygame.K_0:
-                            make_new_object(ObjectType.DELETE, get_mouse_pos())
-
-                        elif event.key == pygame.K_1:
-                            make_new_object(ObjectType.BLOCK, get_mouse_pos())                
-
-                        elif event.key == pygame.K_2:
-                            make_new_object(ObjectType.SPIKE, get_mouse_pos())
-
-                        elif event.key == pygame.K_3:
-                            make_new_object(ObjectType.BLUE_PORTAL, get_mouse_pos())
-
-                        elif event.key == pygame.K_4:
-                            make_new_object(ObjectType.YELLOW_PORTAL, get_mouse_pos())
-
-                        elif event.key == pygame.K_5:
-                            make_new_object(ObjectType.NORMAL_PORTAL, get_mouse_pos())
-
-                        elif event.key == pygame.K_6:
-                            make_new_object(ObjectType.MINI_PORTAL, get_mouse_pos())
-
-                        elif event.key == pygame.K_7:
-                            make_new_object(ObjectType.SLAB, get_mouse_pos())
-
-                        elif event.key == pygame.K_8:
-                            make_new_object(ObjectType.END_PORTAL, get_mouse_pos())
-
-                        elif event.key == pygame.K_9:
-                            make_new_object(ObjectType.SELECT, get_mouse_pos())
-                            
-                        elif event.key == pygame.K_r:
-                            for obj in objects_editing:
-                                obj.rotation += 90
-                                obj.rotation %= 360
-
-                        
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    if not mouse_over_anything() and editing:
-                        make_new_object(selected, get_mouse_pos())
+            self.handle_events(events)
                             
             if tickrate < fps:
                 if frames%(int(fps/tickrate))==0:
-                    for object in objects:
+                    for object in all_objects():
                         object.tick()
                     for player in players:  
                         player.tick()
             else:
                 for i in range(int(tickrate/fps)):
-                    for object in objects:
+                    for object in all_objects():
                         object.tick()
                     for player in players:  
                         player.tick()
 
-            for object in objects:
+            for object in all_objects():
                 object.draw(self.window)
             for player in players:  
                 player.draw(self.window)
@@ -1452,8 +1398,8 @@ class Game:
             if pivot_y < autoscroll_start_y:
                 autoscroll_offset_y += (pivot_y-autoscroll_start_y)/autoscroll_smoothness
 
-            for menu_ in menus:
-                menu_.tick()
+            for menu in self.menus:
+                menu.tick()
 
             for box in text_boxes:
                 box.events = events
@@ -1471,11 +1417,7 @@ class Game:
         
 
             if (frames+1) % (fps*30) == 0 and editing:
-                saved_level_data = save_level()
-                config['autosave'] = {}
-                config['autosave']['level'] = saved_level_data
-                with open('resources/levels/autosave.ini', 'w') as configfile:
-                    config.write(configfile)
+                save_level_good('autosave')
                 print("Auto Saved level")
                 print(frames+1)
 
@@ -1491,10 +1433,6 @@ game = Game()
 # game.load_default()
 game.play()
 
-saved_level_data = save_level()
-config['autosave'] = {}
-config['autosave']['level'] = saved_level_data
-with open('resources/levels/autosave.ini', 'w') as configfile:
-    config.write(configfile)
+save_level_good('autosave')
 print("Saved level")
 pygame.quit()
