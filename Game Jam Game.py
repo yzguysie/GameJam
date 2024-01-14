@@ -839,10 +839,6 @@ def all_objects():
 
 objects_editing = []
 
-background = Sprite(pygame.transform.smoothscale(background_default_image, (screen_width, screen_height)), 0, 0, 0)
-
-menu_background = Sprite(pygame.transform.smoothscale(menu_background_default_image, (screen_width, screen_height)), 0, 0, 0)
-
 
 frames = 0
 last_time = time.time()-100
@@ -1073,30 +1069,15 @@ def save_all_levels(num):
 load_level(f'slot_{level_num}')
 load_new_level = False
 
-def reload_all_sprites():
-    global background
-    global menu_background
-    for player in players:
-        make_sprite(player, player_default_image)
 
-    for hazard in hazards:
-        make_sprite(hazard, hazard_default_image)
-
-
-    for obstacle in obstacles:
-        make_sprite(obstacle, obstacle_default_image)
-
-    for portal in portals:
-        make_sprite(portal, portal_default_image)
-
-    background = Sprite(pygame.transform.smoothscale(background_default_image, (interface.screen_width, interface.screen_height)), 0, 0, 0)
-    menu_background = Sprite(pygame.transform.smoothscale(menu_background_default_image, (interface.screen_width, interface.screen_height)), 0, 0, 0)
-class Interface:
+class Display:
     def __init__(self):
         self.screen_width, self.screen_height = 768, 432
         self.window = pygame.display.set_mode([self.screen_width, self.screen_height], pygame.RESIZABLE)
         self.menus = []
         self.reload_buttons()
+        self.background = Sprite(pygame.transform.smoothscale(background_default_image, (self.screen_width, self.screen_height)), 0, 0, 0)
+        self.menu_background = Sprite(pygame.transform.smoothscale(menu_background_default_image, (self.screen_width, self.screen_height)), 0, 0, 0)
     
 
 
@@ -1111,7 +1092,7 @@ class Interface:
             yscale = self.screen_height/height
             xscale = yscale
             self.reload_buttons()
-            reload_all_sprites()
+            self.reload_all_sprites()
 
 
     def reload_buttons(self):
@@ -1207,7 +1188,22 @@ class Interface:
         # Clean this up - repeated code, loading image for each player
         for player in players:
             make_sprite(player, player_default_image)
+    def reload_all_sprites(self):
+        for player in players:
+            make_sprite(player, player_default_image)
 
+        for hazard in hazards:
+            make_sprite(hazard, hazard_default_image)
+
+
+        for obstacle in obstacles:
+            make_sprite(obstacle, obstacle_default_image)
+
+        for portal in portals:
+            make_sprite(portal, portal_default_image)
+
+        self.background = Sprite(pygame.transform.smoothscale(background_default_image, (self.screen_width, self.screen_height)), 0, 0, 0)
+        self.menu_background = Sprite(pygame.transform.smoothscale(menu_background_default_image, (self.screen_width, self.screen_height)), 0, 0, 0)
 class Game:
     def __init__(self):
         self.playing = True
@@ -1228,8 +1224,8 @@ class Game:
 
     def main_menu(self):
         global editing
-        interface.window.fill(BACKGROUND_COLOR)
-        menu_background.draw(interface.window)
+        display.window.fill(BACKGROUND_COLOR)
+        display.menu_background.draw(display.window)
         events = pygame.event.get()
         for event in events:
             if event.type == pygame.QUIT:
@@ -1243,14 +1239,14 @@ class Game:
                     break
                 
         for button in menu_buttons:
-            button.draw(interface.window)
+            button.draw(display.window)
             if button.get_clicked():
                 # Clean this up - use button onclick()
                 if button == play_button:
                     editing = False
                     self.playing = True
                     self.in_menu = False
-                    interface.reload_buttons()
+                    display.reload_buttons()
                     
                 elif button == options_button:
                     pass
@@ -1259,7 +1255,7 @@ class Game:
                     editing = True
                     self.playing = True
                     self.in_menu = False
-                    interface.reload_buttons()
+                    display.reload_buttons()
 
                 elif button == quit_button:
                     self.in_menu = False
@@ -1356,7 +1352,7 @@ class Game:
         global autoscroll_offset_x, autoscroll_offset_y
 
         while self.playing:
-            interface.check_window_resize()
+            display.check_window_resize()
                 
             if self.in_menu:
                 self.main_menu()
@@ -1366,8 +1362,8 @@ class Game:
                 fps_ = int(1/((time.time()-last_time)/(fps/2))+.5)
                 last_time = time.time()
             
-            interface.window.fill(BACKGROUND_COLOR)
-            background.draw(interface.window)
+            display.window.fill(BACKGROUND_COLOR)
+            display.background.draw(display.window)
 
             if load_new_level:
                 load_level(f'slot_{level_num}')
@@ -1390,9 +1386,9 @@ class Game:
                         player.tick()
 
             for object in all_objects():
-                object.draw(interface.window)
+                object.draw(display.window)
             for player in players:  
-                player.draw(interface.window)
+                player.draw(display.window)
             #Nvm don't Clean up - don't fix this because you already did lol()())()())()()(the obstacles will always be before the others and will always be selected first, so obstacles must be deleted to select hazards/portals on the same grid space
             #objects = obstacles+hazards+portals
 
@@ -1416,7 +1412,7 @@ class Game:
 
             for menu in self.menus:
                 menu.tick()
-                menu.draw(interface.window)
+                menu.draw(display.window)
 
             for box in text_boxes:
                 box.events = events
@@ -1425,12 +1421,12 @@ class Game:
             for button in buttons:
                 #global saving_level
                 #global loading_level
-                button.draw(interface.window)
+                button.draw(display.window)
                 button.get_clicked()
             
             dialogue = dialogue_font.render("FPS: " + str(fps_), True, Colors.white)
             dialogue_rect = dialogue.get_rect()
-            interface.window.blit(dialogue, dialogue_rect)
+            display.window.blit(dialogue, dialogue_rect)
         
 
             if (frames+1) % (fps*30) == 0 and editing:
@@ -1445,7 +1441,7 @@ class Game:
             # delta_time = (time.time()-last_delta)
             # last_delta = time.time()
 
-interface = Interface()
+display = Display()
 game = Game()
 # game.load_default()
 game.play()
