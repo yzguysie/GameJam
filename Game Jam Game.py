@@ -903,7 +903,7 @@ def get_objs_touching(objs, pos, amount):
 
 
 def delete_touching(pos):
-    obj = get_objs_touching(objects, pos, 1)
+    obj = get_objs_touching(all_objects(), pos, 1)
     if obj:
         if isinstance(obj, Obstacle):
             obstacles.remove(obj)
@@ -925,7 +925,7 @@ def make_new_object(id_, pos):
 
     # Clean this up - repeated code
     if id_ == ObjectType.SELECT:
-        obj = get_objs_touching(objects, pos, 1)
+        obj = get_objs_touching(all_objects(), pos, 1)
         if obj:
             if obj in objects_editing:
                 objects_editing.remove(obj)
