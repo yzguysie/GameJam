@@ -534,26 +534,6 @@ class Portal(Drawable):
         self.rotation = 0
 
         #clean this up: make every portal type have a image which goes in a list called ex. images and self.sprite = Sprite(images[mode])
-        if self.mode == 0:
-            self.color = Colors.gray
-
-        elif self.mode == 1:
-            self.color = Colors.yellow
-
-        elif self.mode == 3:
-            self.color = Colors.green
-
-        elif self.mode == 4:
-            self.color = Colors.purple
-
-        elif self.mode == 5:
-            self.color = Colors.red
-
-        elif self.mode == 6:
-            self.color = Colors.gray
-        
-        else:
-            self.color = Colors.white
 
     def __repr__(self):
         # Clean this up - unreadable (what is f)
