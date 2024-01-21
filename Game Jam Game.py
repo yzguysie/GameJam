@@ -539,9 +539,6 @@ class Portal(Drawable):
 
         elif self.mode == 1:
             self.color = Colors.yellow
-   
-        elif self.mode == 2:
-            self.color = Colors.blue
 
         elif self.mode == 3:
             self.color = Colors.green
@@ -571,14 +568,15 @@ class Portal(Drawable):
                 player.gravity = -player.gravity
                 if player.yspeed > player.max_speed_y/2:
                     player.yspeed = player.max_speed_y/2
+
         elif self.mode == 2:
             if player.gravity < 0:
                 player.gravity = -player.gravity
                 if player.yspeed < -player.max_speed_y/2:
                     player.yspeed = -player.max_speed_y/2
 
-
         elif self.mode == 3:
+            #clean this up - why does player mini need to be set to False if you are calling to set it to false. Tested and when remove this line the portals simply don't work.
             player.mini = False
             player.set_mini(player.mini)
 
@@ -611,22 +609,16 @@ class Portal(Drawable):
     def draw(self, window):
         self.update_sprite()
         self.sprite.draw(window)
-        return
+        
         if show_hitboxes:
             pygame.gfxdraw.rectangle(window, (round((self.x-autoscroll_offset_x)*xscale), round((self.y-autoscroll_offset_y)*yscale), round(self.width*xscale), round(self.height*yscale)), Colors.red)
 
-
-
-        if self.mode == 5:
-            rect = pygame.Rect(round((self.x-autoscroll_offset_x)*xscale), round((self.y-autoscroll_offset_y)*yscale), round(self.width*xscale), round(self.height*yscale))
-            pygame.gfxdraw.box(window, rect, self.color)
-            return 
-
-        lowest = .5
-        highest = 1
-        pygame.gfxdraw.aaellipse(window, round(((self.x-autoscroll_offset_x))*xscale), round(((self.y-autoscroll_offset_y))*yscale), round((self.width/2)*xscale), round((self.height/2)*yscale), self.color)
-
-
+class Blue_portal(Portal):
+    def apply(self, player):
+        if player.gravity < 0:
+            player.gravity = -player.gravity
+            if player.yspeed < -player.max_speed_y/2:
+                player.yspeed = -player.max_speed_y/2
 class Level():
     def __init__(self):
         self.player = Player()
@@ -677,6 +669,7 @@ class Level():
             self.portals = []
             for portal in portal_data:
                 if len(portal) > 4:
+                    #Clean this up fix this do this: If every portal is it's own class then how tf does this work then. Every object should have an id based on type so you know what func to call
                     new_portal = Portal(float(portal[0]), float(portal[1]), float(portal[2]), float(portal[3]), int(portal[4]))
                     if len(portal) > 5:
                         new_portal.rotation = float(portal[5])
