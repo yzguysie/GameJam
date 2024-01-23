@@ -26,8 +26,8 @@ portal_sprite = False
 screen_width, screen_height = 768, 432
 
 #MAKE "BUMP pads" that PUSH you like terracotta in minecraft (Like sideways jump pad or those thingies in edge)
-fps = 120
-tickrate = 120
+fps = 60
+tickrate = 60
 width = 1600
 height = 900
 
@@ -281,7 +281,7 @@ class Player(Object):
 
 
             else:
-                on_y = player_top <= box_bottom and player_bottom >= box_bottom
+                on_y = player_top <= box_bottom-player_max_y_speed and player_bottom >= box_bottom
             if player_right > box_left and player_right <= box_left + player_max_x_speed:
                 if on_y: # -self.height/4 for leeway so if almost on top of block it gives it to you
                     self.x = obstacle.x-self.width
