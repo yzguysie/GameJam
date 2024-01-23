@@ -113,8 +113,13 @@ class Sprite():
     def set_centered(self, centered):
         self.centered = centered
 
-class Drawable:
-    def __init__(self):
+class Object:
+    def __init__(self, x, y, width=grid_width, height=grid_height, rotation=0):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.rotation = rotation
         self.sprite = None
 
     def make_sprite(self, image, centered=False):
@@ -130,9 +135,21 @@ class Drawable:
         self.sprite.rotation = self.rotation
 
     def draw(self, window):
-        pass
+        self.update_sprite()
+        self.sprite.draw(window)
+    
 
-class Player(Drawable):
+    def is_colliding(self, object):
+        if object.x+object.width > self.x and object.x < self.x+self.width:
+            if object.y+object.height > self.y and object.y < self.y+self.height:
+                return True
+        return False
+    
+    def __repr__(self):
+        info = [str(self.x), str(self.y), str(self.width), str(self.height), str(self.rotation)]
+        return "@".join(info)
+
+class Player(Object):
     def __init__(self):
         self.x = 0  # consider x and y combined with a position struct, self.pos.x, self.pos.y
         self.xspeed = 0 # consider a Velocity struct (vector) with x and y components
@@ -247,16 +264,26 @@ class Player(Drawable):
             player_bottom = self.y+self.height
             player_right = self.x+self.width
             player_left = self.x
+            player_width = self.width
+            player_height = self.height
             box_top = obstacle.y
             box_bottom = obstacle.y+obstacle.height
             box_right = obstacle.x+obstacle.width
             box_left = obstacle.x
             player_x_speed = self.xspeed*gamespeed
             player_y_speed = self.yspeed*gamespeed
+            player_max_x_speed = self.max_speed_x*gamespeed
+            player_max_y_speed = self.max_speed_y*gamespeed
             gravity_sign = (self.gravity/abs(self.gravity))
             #If hitting left side stop
-            if player_right > box_left and player_right <= box_left + player_x_speed+1:
-                if player_bottom-self.height/4 > box_top+player_y_speed*gravity_sign and player_top+player_y_speed*gravity_sign < box_bottom-self.height/4: # -self.height/4 for leeway so if almost on top of block it gives it to you
+            if gravity_sign == 1:
+                on_y = player_bottom >= box_top+player_max_y_speed and player_top < box_bottom
+
+
+            else:
+                on_y = player_top <= box_bottom and player_bottom >= box_bottom
+            if player_right > box_left and player_right <= box_left + player_max_x_speed:
+                if on_y: # -self.height/4 for leeway so if almost on top of block it gives it to you
                     self.x = obstacle.x-self.width
                     self.xspeed = 0
 
@@ -265,7 +292,7 @@ class Player(Drawable):
 
             #if hitting right side stop
             if player_left < box_right and player_left-player_x_speed >= box_right + 0:
-                if player_bottom-self.height/4 > box_top-(player_y_speed)*gravity_sign and player_top+(player_y_speed)*gravity_sign < box_bottom-self.height/4: #Thought this caused the Catching on right side of column but i dont know
+                if on_y: #Thought this caused the Catching on right side of column but i dont know
                 #if player_bottom-self.height/4 > box_top-abs(player_y_speed)*gravity_sign and player_top+abs(player_y_speed)*gravity_sign < box_bottom-self.height/4: #Thought this is right but i dont think so
                     self.x = box_right
                     self.xspeed = 0
@@ -332,11 +359,11 @@ class Player(Drawable):
         box_bottom = obstacle.y+obstacle.height
         box_right = obstacle.x+obstacle.width
         box_left = obstacle.x
-        player_x_speed = self.xspeed*gamespeed
-        player_y_speed = self.yspeed*gamespeed
+        player_max_x_speed = self.max_speed_x*gamespeed
+        player_max_y_speed = self.max_speed_y*gamespeed
         gravity_sign = (self.gravity/abs(self.gravity))
         rightside_up = self.gravity >= 0
-        on_x = player_right-player_x_speed > box_left and player_left-player_x_speed < box_right
+        on_x = player_right > box_left and player_left < box_right
         on_y = False
 
         if on_x:
@@ -444,7 +471,7 @@ class Player(Drawable):
         
         self.make_sprite(player_default_image)
 
-class Obstacle(Drawable):
+class Obstacle(Object):
     def __init__(self, x, y, width, height):
         self.x = x
         self.y = y
@@ -479,7 +506,7 @@ class Obstacle(Drawable):
     def tick(self):
         pass
 
-class Hazard(Drawable):
+class Hazard(Object):
     def __init__(self, x, y, width, height):
         self.x = x
         self.y = y
@@ -523,7 +550,7 @@ class Hazard(Drawable):
         pass
         
 
-class Portal(Drawable):
+class Portal(Object):
     def __init__(self, x, y, width, height, type_):
         self.x = x
         self.y = y
@@ -534,29 +561,6 @@ class Portal(Drawable):
         self.rotation = 0
 
         # #clean this up: make every portal type have a image which goes in a list called ex. images and self.sprite = Sprite(images[mode])
-        # if self.mode == 0:
-        #     self.color = Colors.gray
-
-        # elif self.mode == 1:
-        #     self.color = Colors.yellow
-   
-        # elif self.mode == 2:
-        #     self.color = Colors.blue
-
-        # elif self.mode == 3:
-        #     self.color = Colors.green
-
-        # elif self.mode == 4:
-        #     self.color = Colors.purple
-
-        # elif self.mode == 5:
-        #     self.color = Colors.red
-
-        # elif self.mode == 6:
-        #     self.color = Colors.gray
-        
-        # else:
-        #     self.color = Colors.white
 
     def __repr__(self):
         # Clean this up - unreadable (what is f)
@@ -600,23 +604,23 @@ class Portal(Drawable):
             
     def tick(self):
         for player in players:
-            if self.check_collision(player):
+            if self.is_colliding(player):
                 self.apply(player)
 
-    def check_collision(self, player):
-        if player.x+player.width > self.x and player.x < self.x+self.width:
-            if player.y+player.height > self.y and player.y < self.y+self.height:
-                return True
-        return False
+    # def check_collision(self, player):
+    #     if player.x+player.width > self.x and player.x < self.x+self.width:
+    #         if player.y+player.height > self.y and player.y < self.y+self.height:
+    #             return True
+    #     return False
 
-    def draw(self, window):
-        self.update_sprite()
-        self.sprite.draw(window)
+    # def draw(self, window):
+    #     self.update_sprite()
+    #     self.sprite.draw(window)
         
-        if show_hitboxes:
-            pygame.gfxdraw.rectangle(window, (round((self.x-autoscroll_offset_x)*xscale), round((self.y-autoscroll_offset_y)*yscale), round(self.width*xscale), round(self.height*yscale)), Colors.red)
+    #     if show_hitboxes:
+    #         pygame.gfxdraw.rectangle(window, (round((self.x-autoscroll_offset_x)*xscale), round((self.y-autoscroll_offset_y)*yscale), round(self.width*xscale), round(self.height*yscale)), Colors.red)
 
-class Blue_portal(Portal):
+class BluePortal(Portal):
     def apply(self, player):
         if player.gravity < 0:
             player.gravity = -player.gravity
