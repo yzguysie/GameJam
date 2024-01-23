@@ -115,6 +115,7 @@ class Sprite():
 
 class Object:
     def __init__(self, x, y, width=grid_width, height=grid_height, rotation=0):
+        self.id = 0
         self.x = x
         self.y = y
         self.width = width
@@ -146,7 +147,7 @@ class Object:
         return False
     
     def __repr__(self):
-        info = [str(self.x), str(self.y), str(self.width), str(self.height), str(self.rotation)]
+        info = [str(self.id), str(self.x), str(self.y), str(self.width), str(self.height), str(self.rotation)]
         return "@".join(info)
 
 class Player(Object):
@@ -472,21 +473,18 @@ class Player(Object):
         self.make_sprite(player_default_image)
 
 class Obstacle(Object):
-    def __init__(self, x, y, width, height):
+    def __init__(self, x, y, width, height, rotation=0):
+        self.id = 1
         self.x = x
         self.y = y
         self.width = width
         self.height = height
+        self.rotation = rotation
         self.color = Colors.light_gray
         self.outline_color = Colors.gray
         self.rotation = 0
         self.costume = 0
 
-    def __repr__(self):
-        info = [str(self.x), str(self.y), str(self.width), str(self.height), str(self.rotation), str(self.costume), str(self.color), str(self.outline_color)]
-        return "@".join(info)
-        # split_character = "@"
-        # return str(self.x) + split_character + str(self.y) + split_character + str(self.width) + split_character + str(self.height) + split_character + str(self.rotation) + split_character + str(self.costume) + split_character + str(self.color) + split_character + str(self.outline_color) 
 
     def draw(self, window):
         if obstacle_sprite:
@@ -507,19 +505,17 @@ class Obstacle(Object):
         pass
 
 class Hazard(Object):
-    def __init__(self, x, y, width, height):
+    def __init__(self, x, y, width, height, rotation=0):
+        self.id = 2
         self.x = x
         self.y = y
         self.width = width
         self.height = height
+        self.rotation = rotation
         self.color = Colors.red
         self.type = 1
         self.rotation = 0
 
-    def __repr__(self):
-        # Clean this up - repeated code and what is f (should put into func)
-        info = [str(self.x), str(self.y), str(self.width), str(self.height), str(self.rotation), str(self.type), str(self.color)]
-        return "@".join(info)
 
         # f = "@"
         # return str(self.x) + f + str(self.y) + f + str(self.width) + f + str(self.height) + f + str(self.rotation) + f + str(self.type) + f + str(self.color)
@@ -551,21 +547,23 @@ class Hazard(Object):
         
 
 class Portal(Object):
-    def __init__(self, x, y, width, height, type_):
+    def __init__(self, x, y, width, height, type_, rotation=0):
         self.x = x
         self.y = y
         self.width = width
         self.height = height
         self.mode = type_
+        self.rotation = rotation
+        self.id = self.mode+2
         self.contacting = False
         self.rotation = 0
 
         # #clean this up: make every portal type have a image which goes in a list called ex. images and self.sprite = Sprite(images[mode])
 
-    def __repr__(self):
+    #def __repr__(self):
         # Clean this up - unreadable (what is f)
-        info = [str(self.x), str(self.y), str(self.width), str(self.height), str(self.mode), str(self.rotation)]
-        return "@".join(info)
+        #info = [str(self.id), str(self.x), str(self.y), str(self.width), str(self.height), str(self.rotation)]
+        #return "@".join(info)
         # f = "@"
         # return str(self.x) + f + str(self.y) + f + str(self.width) + f + str(self.height) + f + str(self.mode) + f + str(self.rotation)
 
@@ -635,57 +633,76 @@ class Level():
 
     def load(self, data):
         #try:
-            data = data.split("|")
-            player_data = data[0].split(" ")
-            obstacle_data = data[1].split("/")
-            for i in range(len(obstacle_data)):
-                obstacle_data[i] = obstacle_data[i].split("@")
+            print(data)
+            data = data.split("/")
+            print(data)
 
-
-            hazard_data = data[2].split("/")
-            for i in range(len(hazard_data)):
-                hazard_data[i] = hazard_data[i].split("@")
-
-            portal_data = data[3].split("/")
-            for i in range(len(portal_data)):
-                portal_data[i] = portal_data[i].split("@")
+            self.obstacles = []
+            self.hazards = []
+            self.portals = []
+            important_list = [Object, Obstacle, Hazard, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal]
             
-            self.player = Player()
-            if len(player_data) == 2:
-                self.player.x = float(player_data[0])
-                self.player.y = float(player_data[1])
+            for object in data:
+                object_data = object.split("@")
+                object_id = object_data[0]
+                print(object_data)
+                if int(object_id) == 1:
+                    self.obstacles.append(Obstacle(float(object_data[1]), float(object_data[2]), float(object_data[3]), float(object_data[4]), float(object_data[5])))
+                elif int(object_id) == 2:
+                    self.hazards.append(Hazard(float(object_data[1]), float(object_data[2]), float(object_data[3]), float(object_data[4]), float(object_data[5])))
+                else:
+                    self.portals.append(Portal(float(object_data[1]), float(object_data[2]), float(object_data[3]), float(object_data[4]), int(object_data[0])-2, float(object_data[5])))
+            print(self.obstacles)
+        #     player_data = data[0].split(" ")
+        #     obstacle_data = data[1].split("/")
+        #     for i in range(len(obstacle_data)):
+        #         obstacle_data[i] = obstacle_data[i].split("@")
+
+
+        #     hazard_data = data[2].split("/")
+        #     for i in range(len(hazard_data)):
+        #         hazard_data[i] = hazard_data[i].split("@")
+
+        #     portal_data = data[3].split("/")
+        #     for i in range(len(portal_data)):
+        #         portal_data[i] = portal_data[i].split("@")
+            
+        #     self.player = Player()
+        #     if len(player_data) == 2:
+        #         self.player.x = float(player_data[0])
+        #         self.player.y = float(player_data[1])
             
     
-            self.obstacles = []
-            for obstacle in obstacle_data:
-                if len(obstacle) > 3:
-                    new_obstacle = Obstacle(float(obstacle[0]), float(obstacle[1]), float(obstacle[2]), float(obstacle[3]))
-                    if len(obstacle) > 4:
-                        new_obstacle.rotation = float(obstacle[4])
-                    self.obstacles.append(new_obstacle)
+        #     self.obstacles = []
+        #     for obstacle in obstacle_data:
+        #         if len(obstacle) > 3:
+        #             new_obstacle = Obstacle(float(obstacle[0]), float(obstacle[1]), float(obstacle[2]), float(obstacle[3]))
+        #             if len(obstacle) > 4:
+        #                 new_obstacle.rotation = float(obstacle[4])
+        #             self.obstacles.append(new_obstacle)
                     
 
-            self.hazards = []
-            for hazard in hazard_data:
-                if len(hazard) > 3:
-                    new_hazard = Hazard(float(hazard[0]), float(hazard[1]), float(hazard[2]), float(hazard[3]))
-                    if len(hazard) > 4:
-                        new_hazard.rotation = float(hazard[4])
-                    self.hazards.append(new_hazard)
+        #     self.hazards = []
+        #     for hazard in hazard_data:
+        #         if len(hazard) > 3:
+        #             new_hazard = Hazard(float(hazard[0]), float(hazard[1]), float(hazard[2]), float(hazard[3]))
+        #             if len(hazard) > 4:
+        #                 new_hazard.rotation = float(hazard[4])
+        #             self.hazards.append(new_hazard)
 
-            self.portals = []
-            for portal in portal_data:
-                if len(portal) > 4:
-                    #Clean this up fix this do this: If every portal is it's own class then how tf does this work then. Every object should have an id based on type so you know what func to call
-                    new_portal = Portal(float(portal[0]), float(portal[1]), float(portal[2]), float(portal[3]), int(portal[4]))
-                    if len(portal) > 5:
-                        new_portal.rotation = float(portal[5])
-                    self.portals.append(new_portal)
+        #     self.portals = []
+        #     for portal in portal_data:
+        #         if len(portal) > 4:
+        #             #Clean this up fix this do this: If every portal is it's own class then how tf does this work then. Every object should have an id based on type so you know what func to call
+        #             new_portal = Portal(float(portal[0]), float(portal[1]), float(portal[2]), float(portal[3]), int(portal[4]))
+        #             if len(portal) > 5:
+        #                 new_portal.rotation = float(portal[5])
+        #             self.portals.append(new_portal)
 
-            #print(str(data) + " loaded.")
+        #     #print(str(data) + " loaded.")
         
-        #except:
-            #print("Could not load level: level data corrupted")
+        # #except:
+        #     #print("Could not load level: level data corrupted")
 
 def set_level(level):
     global player
@@ -710,26 +727,10 @@ def save_level():
     #global obstacles
     
     data = ""
-    data += str(player.x) + " " + str(player.y)
-    data += "|"
-    strobstacles = []
-    for i in range(len(obstacles)):
-        strobstacles.append(repr(obstacles[i]))
-    data += "/".join(strobstacles)
-
-    data += "|"
-    strhazards = []
-    for i in range(len(hazards)):
-        strhazards.append(repr(hazards[i]))
-    data += "/".join(strhazards)
-
-    data += "|"
-
-    strportals = []
-    for i in range(len(portals)):
-        strportals.append(repr(portals[i]))
-    data += "/".join(strportals)
-    #print(data)
+    strobjects = []
+    for object in all_objects():
+        strobjects.append(repr(object))
+    data += "/".join(strobjects)
     return data
 
 menu_button_width = round(screen_width/5)
