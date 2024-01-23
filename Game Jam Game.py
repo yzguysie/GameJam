@@ -633,9 +633,7 @@ class Level():
 
     def load(self, data):
         #try:
-            print(data)
             data = data.split("/")
-            print(data)
 
             self.obstacles = []
             self.hazards = []
@@ -645,64 +643,12 @@ class Level():
             for object in data:
                 object_data = object.split("@")
                 object_id = object_data[0]
-                print(object_data)
                 if int(object_id) == 1:
                     self.obstacles.append(Obstacle(float(object_data[1]), float(object_data[2]), float(object_data[3]), float(object_data[4]), float(object_data[5])))
                 elif int(object_id) == 2:
                     self.hazards.append(Hazard(float(object_data[1]), float(object_data[2]), float(object_data[3]), float(object_data[4]), float(object_data[5])))
                 else:
                     self.portals.append(Portal(float(object_data[1]), float(object_data[2]), float(object_data[3]), float(object_data[4]), int(object_data[0])-2, float(object_data[5])))
-            print(self.obstacles)
-        #     player_data = data[0].split(" ")
-        #     obstacle_data = data[1].split("/")
-        #     for i in range(len(obstacle_data)):
-        #         obstacle_data[i] = obstacle_data[i].split("@")
-
-
-        #     hazard_data = data[2].split("/")
-        #     for i in range(len(hazard_data)):
-        #         hazard_data[i] = hazard_data[i].split("@")
-
-        #     portal_data = data[3].split("/")
-        #     for i in range(len(portal_data)):
-        #         portal_data[i] = portal_data[i].split("@")
-            
-        #     self.player = Player()
-        #     if len(player_data) == 2:
-        #         self.player.x = float(player_data[0])
-        #         self.player.y = float(player_data[1])
-            
-    
-        #     self.obstacles = []
-        #     for obstacle in obstacle_data:
-        #         if len(obstacle) > 3:
-        #             new_obstacle = Obstacle(float(obstacle[0]), float(obstacle[1]), float(obstacle[2]), float(obstacle[3]))
-        #             if len(obstacle) > 4:
-        #                 new_obstacle.rotation = float(obstacle[4])
-        #             self.obstacles.append(new_obstacle)
-                    
-
-        #     self.hazards = []
-        #     for hazard in hazard_data:
-        #         if len(hazard) > 3:
-        #             new_hazard = Hazard(float(hazard[0]), float(hazard[1]), float(hazard[2]), float(hazard[3]))
-        #             if len(hazard) > 4:
-        #                 new_hazard.rotation = float(hazard[4])
-        #             self.hazards.append(new_hazard)
-
-        #     self.portals = []
-        #     for portal in portal_data:
-        #         if len(portal) > 4:
-        #             #Clean this up fix this do this: If every portal is it's own class then how tf does this work then. Every object should have an id based on type so you know what func to call
-        #             new_portal = Portal(float(portal[0]), float(portal[1]), float(portal[2]), float(portal[3]), int(portal[4]))
-        #             if len(portal) > 5:
-        #                 new_portal.rotation = float(portal[5])
-        #             self.portals.append(new_portal)
-
-        #     #print(str(data) + " loaded.")
-        
-        # #except:
-        #     #print("Could not load level: level data corrupted")
 
 def set_level(level):
     global player
