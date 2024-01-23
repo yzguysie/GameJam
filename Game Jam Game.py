@@ -533,30 +533,30 @@ class Portal(Drawable):
         self.contacting = False
         self.rotation = 0
 
-        #clean this up: make every portal type have a image which goes in a list called ex. images and self.sprite = Sprite(images[mode])
-        if self.mode == 0:
-            self.color = Colors.gray
+        # #clean this up: make every portal type have a image which goes in a list called ex. images and self.sprite = Sprite(images[mode])
+        # if self.mode == 0:
+        #     self.color = Colors.gray
 
-        elif self.mode == 1:
-            self.color = Colors.yellow
+        # elif self.mode == 1:
+        #     self.color = Colors.yellow
    
-        elif self.mode == 2:
-            self.color = Colors.blue
+        # elif self.mode == 2:
+        #     self.color = Colors.blue
 
-        elif self.mode == 3:
-            self.color = Colors.green
+        # elif self.mode == 3:
+        #     self.color = Colors.green
 
-        elif self.mode == 4:
-            self.color = Colors.purple
+        # elif self.mode == 4:
+        #     self.color = Colors.purple
 
-        elif self.mode == 5:
-            self.color = Colors.red
+        # elif self.mode == 5:
+        #     self.color = Colors.red
 
-        elif self.mode == 6:
-            self.color = Colors.gray
+        # elif self.mode == 6:
+        #     self.color = Colors.gray
         
-        else:
-            self.color = Colors.white
+        # else:
+        #     self.color = Colors.white
 
     def __repr__(self):
         # Clean this up - unreadable (what is f)
@@ -625,6 +625,16 @@ class Portal(Drawable):
         lowest = .5
         highest = 1
         pygame.gfxdraw.aaellipse(window, round(((self.x-autoscroll_offset_x))*xscale), round(((self.y-autoscroll_offset_y))*yscale), round((self.width/2)*xscale), round((self.height/2)*yscale), self.color)
+
+
+
+class Blue_portal(Portal):
+
+    def __init__(self):
+        self.image = portal_default_image
+
+    def apply(self):
+        pass
 
 
 class Level():
@@ -1136,10 +1146,10 @@ class Display:
             load_button = ui.button(self.screen_width-button_width, 0, button_width, button_height, "load", partial(set_saving_loading, False, True))
             reset_button = ui.button(self.screen_width-button_width*2, button_height, button_width, button_height, "reset", partial(set_level, Level()))
             delete_button = ui.button(0, (button_height+5), button_width, button_height, "delete", partial(set_selected_object, ObjectType.DELETE))
-            block_button = ui.button((button_width+5)*0, (button_height+5)*2, button_width, button_height, "block", partial(set_selected_object, ObjectType.BLOCK))
+            block_button = ui.button((button_width+5)*0, (button_height+5)*2, button_width, button_height, "block", partial(set_selected_object, ObjectType.BLOCK), obstacle_default_image)
             slab_button = ui.button((button_width+5)*1, (button_height+5)*2, button_width, button_height, "slab", partial(set_selected_object, ObjectType.SLAB))
             mini_block_button = ui.button((button_width+5)*2, (button_height+5)*2, button_width, button_height, "mini block", partial(set_selected_object, ObjectType.MINI_BLOCK))
-            spike_button = ui.button((button_width+5)*3, (button_height+5)*2, button_width, button_height, "spike", partial(set_selected_object, ObjectType.SPIKE))
+            spike_button = ui.button((button_width+5)*3, (button_height+5)*2, button_width, button_height, "spike", partial(set_selected_object, ObjectType.SPIKE), hazard_default_image)
             yellow_portal_button = ui.button(0, (button_height+5)*3, button_width*2, button_height, "upside down portal", partial(set_selected_object, ObjectType.YELLOW_PORTAL))
             blue_portal_button = ui.button((button_width+5)*2, (button_height+5)*3, button_width*2, button_height, "rightside up portal", partial(set_selected_object, ObjectType.BLUE_PORTAL))
             mini_portal_button = ui.button((button_width+5)*0, (button_height+5)*4, button_width, button_height, "Mini portal", partial(set_selected_object, ObjectType.MINI_PORTAL))
