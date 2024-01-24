@@ -619,11 +619,39 @@ class Portal(Object):
     #         pygame.gfxdraw.rectangle(window, (round((self.x-autoscroll_offset_x)*xscale), round((self.y-autoscroll_offset_y)*yscale), round(self.width*xscale), round(self.height*yscale)), Colors.red)
 
 class BluePortal(Portal):
+    def __init__(self, x, y, width, height, rotation=0):
+        self.id = 3
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.rotation = rotation
+        self.contacting = False
+        self.rotation = 0
+
     def apply(self, player):
         if player.gravity < 0:
             player.gravity = -player.gravity
             if player.yspeed < -player.max_speed_y/2:
                 player.yspeed = -player.max_speed_y/2
+
+class YellowPortal(Portal):
+    def __init__(self, x, y, width, height, rotation=0):
+        self.id = 3
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.rotation = rotation
+        self.contacting = False
+        self.rotation = 0
+
+    def apply(self, player):
+        if player.gravity < 0:
+            player.gravity = -player.gravity
+            if player.yspeed < -player.max_speed_y/2:
+                player.yspeed = -player.max_speed_y/2
+    
 class Level():
     def __init__(self):
         self.player = Player()
@@ -638,17 +666,24 @@ class Level():
             self.obstacles = []
             self.hazards = []
             self.portals = []
-            important_list = [Object, Obstacle, Hazard, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal]
+            
             
             for object in data:
                 object_data = object.split("@")
-                object_id = object_data[0]
+                object_id = int(object_data[0])
+
+
                 if int(object_id) == 1:
                     self.obstacles.append(Obstacle(float(object_data[1]), float(object_data[2]), float(object_data[3]), float(object_data[4]), float(object_data[5])))
                 elif int(object_id) == 2:
                     self.hazards.append(Hazard(float(object_data[1]), float(object_data[2]), float(object_data[3]), float(object_data[4]), float(object_data[5])))
                 else:
-                    self.portals.append(Portal(float(object_data[1]), float(object_data[2]), float(object_data[3]), float(object_data[4]), int(object_data[0])-2, float(object_data[5])))
+                    portal_type = Game.important_list[object_id]
+                    if portal_type != Portal:
+                        new_portal = Game.important_list[object_id](float(object_data[1]), float(object_data[2]), float(object_data[3]), float(object_data[4]), float(object_data[5]))
+                    else:
+                        new_portal = Portal(float(object_data[1]), float(object_data[2]), float(object_data[3]), float(object_data[4]), int(object_data[0])-2, float(object_data[5]))
+                    self.portals.append(new_portal)
 
 def set_level(level):
     global player
@@ -1145,6 +1180,7 @@ class Display:
         
 class Game:
     def __init__(self):
+        self.important_list = [Object, Obstacle, Hazard, BluePortal, YellowPortal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal]
         self.display = Display()
         self.playing = True
         self.in_menu = True
