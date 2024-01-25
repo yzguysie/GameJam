@@ -89,7 +89,8 @@ autoscroll_offset_x = 0
 autoscroll_offset_y = 0
 
 world_height_limit = -5000
-
+def example_func(i):
+        print(i)
 class Sprite():
     def __init__(self, image, x, y, rotation):
         self.x = x
@@ -462,15 +463,17 @@ class Player(Object):
 
     def set_mini(self, mini):
         if mini:
+            self.mini = True
             self.width = self.miniwidth
             self.height = self.miniheight
-            self.mini = True
         else:
+            self.mini = False
             self.width = self.normwidth
             self.height = self.normheight
-            self.mini = False
         
         self.make_sprite(player_default_image)
+
+
 
 class Obstacle(Object):
     def __init__(self, x, y, width, height, rotation=0):
@@ -484,6 +487,8 @@ class Obstacle(Object):
         self.outline_color = Colors.gray
         self.rotation = 0
         self.costume = 0
+
+   
 
 
     def draw(self, window):
@@ -520,27 +525,27 @@ class Hazard(Object):
         # f = "@"
         # return str(self.x) + f + str(self.y) + f + str(self.width) + f + str(self.height) + f + str(self.rotation) + f + str(self.type) + f + str(self.color)
     
-    def draw(self, window):
-        if show_hitboxes:
-            pygame.gfxdraw.rectangle(window, (round((self.x+self.width/4-autoscroll_offset_x)*xscale), round((self.y+self.height/4-autoscroll_offset_y)*yscale), round(self.width/2*xscale), round(self.height/2*yscale)), Colors.red)
+    # def draw(self, window):
+    #     if show_hitboxes:
+    #         pygame.gfxdraw.rectangle(window, (round((self.x+self.width/4-autoscroll_offset_x)*xscale), round((self.y+self.height/4-autoscroll_offset_y)*yscale), round(self.width/2*xscale), round(self.height/2*yscale)), Colors.red)
 
-        if hazard_sprite:
-            self.update_sprite()
-            self.sprite.draw(window)
-            return
-        if self.type == 1:
-            outline = .667
-            color = (self.color[0]*outline, self.color[1]*outline, self.color[2]*outline)
-            if self.rotation < 180:
-                pygame.gfxdraw.filled_trigon(window, round(self.x*xscale), round((self.y+self.height-self.height*(self.rotation/180))*yscale), round((self.x+self.width/2+self.width/2*(self.rotation/180))*xscale), round((self.y+self.height*(self.rotation/180))*yscale), round((self.x+self.width-self.width*(self.rotation/180))*xscale), round((self.y+self.height)*yscale), self.color)
-            elif self.rotation == 180:
-                pygame.gfxdraw.filled_trigon(window, round(self.x*xscale), round(self.y*yscale), round((self.x+self.width/2)*xscale), round((self.y+self.height)*yscale), round((self.x+self.width)*xscale), round(self.y*yscale), self.color)
-            else:
-                pass
+    #     if hazard_sprite:
+    #         self.update_sprite()
+    #         self.sprite.draw(window)
+    #         return
+    #     if self.type == 1:
+    #         outline = .667
+    #         color = (self.color[0]*outline, self.color[1]*outline, self.color[2]*outline)
+    #         if self.rotation < 180:
+    #             pygame.gfxdraw.filled_trigon(window, round(self.x*xscale), round((self.y+self.height-self.height*(self.rotation/180))*yscale), round((self.x+self.width/2+self.width/2*(self.rotation/180))*xscale), round((self.y+self.height*(self.rotation/180))*yscale), round((self.x+self.width-self.width*(self.rotation/180))*xscale), round((self.y+self.height)*yscale), self.color)
+    #         elif self.rotation == 180:
+    #             pygame.gfxdraw.filled_trigon(window, round(self.x*xscale), round(self.y*yscale), round((self.x+self.width/2)*xscale), round((self.y+self.height)*yscale), round((self.x+self.width)*xscale), round(self.y*yscale), self.color)
+    #         else:
+    #             pass
             
-        if self.type == 2:
-            self.rect = (self.x*xscale, self.y*yscale, self.width*xscale, self.height*yscale)
-            pygame.gfxdraw.box(window, self.rect, self.color)
+    #     if self.type == 2:
+    #         self.rect = (self.x*xscale, self.y*yscale, self.width*xscale, self.height*yscale)
+    #         pygame.gfxdraw.box(window, self.rect, self.color)
 
     def tick(self):
         pass
@@ -568,21 +573,20 @@ class Portal(Object):
         # return str(self.x) + f + str(self.y) + f + str(self.width) + f + str(self.height) + f + str(self.mode) + f + str(self.rotation)
 
     def apply(self, player):
-        if self.mode == 1:
-            if player.gravity > 0:
-                player.gravity = -player.gravity
-                if player.yspeed > player.max_speed_y/2:
-                    player.yspeed = player.max_speed_y/2
+        # if self.mode == 1:
+        #     if player.gravity > 0:
+        #         player.gravity = -player.gravity
+        #         if player.yspeed > player.max_speed_y/2:
+        #             player.yspeed = player.max_speed_y/2
 
-        elif self.mode == 2:
-            if player.gravity < 0:
-                player.gravity = -player.gravity
-                if player.yspeed < -player.max_speed_y/2:
-                    player.yspeed = -player.max_speed_y/2
+        # elif self.mode == 2:
+        #     if player.gravity < 0:
+        #         player.gravity = -player.gravity
+        #         if player.yspeed < -player.max_speed_y/2:
+        #             player.yspeed = -player.max_speed_y/2
 
-        elif self.mode == 3:
+        if self.mode == 3:
             #clean this up - why does player mini need to be set to False if you are calling to set it to false. Tested and when remove this line the portals simply don't work.
-            player.mini = False
             player.set_mini(player.mini)
 
         elif self.mode == 4:
@@ -637,7 +641,7 @@ class BluePortal(Portal):
 
 class YellowPortal(Portal):
     def __init__(self, x, y, width, height, rotation=0):
-        self.id = 3
+        self.id = 4
         self.x = x
         self.y = y
         self.width = width
@@ -647,10 +651,31 @@ class YellowPortal(Portal):
         self.rotation = 0
 
     def apply(self, player):
-        if player.gravity < 0:
+        if player.gravity > 0:
             player.gravity = -player.gravity
-            if player.yspeed < -player.max_speed_y/2:
-                player.yspeed = -player.max_speed_y/2
+            if player.yspeed > player.max_speed_y/2:
+                player.yspeed = player.max_speed_y/2
+
+
+class MiniPortal(Portal):
+    def __init__(self, x, y, width, height, rotation=0):
+        self.id = 5
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.rotation = rotation
+        self.contacting = False
+        self.rotation = 0
+    
+    def apply(self, player):
+        print("yellow portal applying")
+        print(self)
+        if player.gravity > 0:
+            player.gravity = -player.gravity
+            if player.yspeed > player.max_speed_y/2:
+                player.yspeed = player.max_speed_y/2
+
     
 class Level():
     def __init__(self):
@@ -661,6 +686,7 @@ class Level():
 
     def load(self, data):
         #try:
+            important_list = [Object, Obstacle, Hazard, BluePortal, YellowPortal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal]
             data = data.split("/")
 
             self.obstacles = []
@@ -678,11 +704,12 @@ class Level():
                 elif int(object_id) == 2:
                     self.hazards.append(Hazard(float(object_data[1]), float(object_data[2]), float(object_data[3]), float(object_data[4]), float(object_data[5])))
                 else:
-                    portal_type = Game.important_list[object_id]
+                    portal_type = important_list[object_id]
                     if portal_type != Portal:
-                        new_portal = Game.important_list[object_id](float(object_data[1]), float(object_data[2]), float(object_data[3]), float(object_data[4]), float(object_data[5]))
+                        new_portal = portal_type(float(object_data[1]), float(object_data[2]), float(object_data[3]), float(object_data[4]), float(object_data[5]))
                     else:
                         new_portal = Portal(float(object_data[1]), float(object_data[2]), float(object_data[3]), float(object_data[4]), int(object_data[0])-2, float(object_data[5]))
+                    
                     self.portals.append(new_portal)
 
 def set_level(level):
@@ -690,7 +717,6 @@ def set_level(level):
     global obstacles
     global hazards
     global portals
-    global objects
     try:
         player = level.player
 
@@ -767,26 +793,6 @@ players = []
 
 for i in range(player_count):
     player = Player()
-    # if (player_random) and i % 2 == 1:
-    #     player.gravity = -player.gravity
-    # if player_random:
-    #     player.gravity *= random.uniform(0, 2)
-    #     while player.gravity == 0:
-    #         player.gravity *= random.uniform(0, 2)
-        
-    #     player.x += i
-    #     player.color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-    #     player.width = (random.randint(10, 50))
-    #     player.height = (random.randint(10, 50))
-    #     player.normwidth = player.width
-    #     player.normheight = player.height
-    #     player.miniwidth = player.width/math.sqrt(2)
-    #     player.miniheight = player.height/math.sqrt(2)
-    #     player.jump_height = random.randint(17, 30)
-    #     player.mini_jump_height = player.jump_height/1.2
-    #     player.max_speed_x = random.uniform(5, 20)
-    #     player.max_speed_y = random.uniform(10, 50)
-    #     player.acceleration = random.uniform(.5, 2)
 
     players.append(player)
 
@@ -819,9 +825,6 @@ objects_editing = []
 frames = 0
 last_time = time.time()-100
 
-# Clean this up - delete this
-def example_func(i):
-    print(i)
     
 
 def mouse_over_anything():
@@ -837,16 +840,11 @@ def mouse_over_anything():
 
 buttons = []
 
-# button_width = round(screen_width/20)
-# button_height = round(screen_height/30)
 
 sliders = []
 
 text_boxes = []
 
-# ex_text_box = ui.text_box(window, 600, 100, 100, 100)
-
-#text_boxes.append(ex_text_box)
 
 def get_grid_pos(pos):
     global grid_width
@@ -887,12 +885,7 @@ def get_objs_touching(objs, pos, amount):
 def delete_touching(pos):
     obj = get_objs_touching(all_objects(), pos, 1)
     if obj:
-        if isinstance(obj, Obstacle):
-            obstacles.remove(obj)
-        elif isinstance(obj, Hazard):
-            hazards.remove(obj)
-        elif isinstance(obj, Portal):
-            portals.remove(obj)
+        obstacles.remove(obj)
 
     
 def make_new_object(id_, pos):
@@ -933,13 +926,13 @@ def make_new_object(id_, pos):
 
     if id_ == ObjectType.YELLOW_PORTAL:
         x, y = get_grid_pos(pos)
-        new_portal = Portal(x, y, grid_width/2, grid_height*2, 1)
+        new_portal = YellowPortal(x, y, grid_width/2, grid_height*2)
         new_portal.make_sprite(portal_default_image)
         portals.append(new_portal)
 
     if id_ == ObjectType.BLUE_PORTAL:
         x, y = get_grid_pos(pos)
-        new_portal = Portal(x, y, grid_width/2, grid_height*2, 2)
+        new_portal = BluePortal(x, y, grid_width/2, grid_height*2)
         new_portal.make_sprite(portal_default_image)
         portals.append(new_portal)
 
