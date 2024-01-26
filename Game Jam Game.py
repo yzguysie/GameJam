@@ -31,6 +31,8 @@ tickrate = 60
 width = 1600
 height = 900
 
+
+
 grid_width = round(width/32)
 grid_height = round(height/18)
 xscale = screen_width/width
@@ -89,8 +91,10 @@ autoscroll_offset_x = 0
 autoscroll_offset_y = 0
 
 world_height_limit = -5000
+
 def example_func(i):
         print(i)
+        
 class Sprite():
     def __init__(self, image, x, y, rotation):
         self.x = x
@@ -573,6 +577,7 @@ class Portal(Object):
         # return str(self.x) + f + str(self.y) + f + str(self.width) + f + str(self.height) + f + str(self.mode) + f + str(self.rotation)
 
     def apply(self, player):
+        pass
         # if self.mode == 1:
         #     if player.gravity > 0:
         #         player.gravity = -player.gravity
@@ -585,24 +590,23 @@ class Portal(Object):
         #         if player.yspeed < -player.max_speed_y/2:
         #             player.yspeed = -player.max_speed_y/2
 
-        if self.mode == 3:
-            #clean this up - why does player mini need to be set to False if you are calling to set it to false. Tested and when remove this line the portals simply don't work.
-            player.set_mini(player.mini)
+        # if self.mode == 3:
+        #     #clean this up - why does player mini need to be set to False if you are calling to set it to false. Tested and when remove this line the portals simply don't work.
+        #     player.set_mini(False)
 
-        elif self.mode == 4:
-            player.mini = True
-            player.set_mini(player.mini)
+        # elif self.mode == 4:
+        #     player.set_mini(True)
 
-        elif self.mode == 5:
-            player.yspeed = -player.max_speed_y*(abs(player.gravity)/player.gravity)
+        # if self.mode == 5:
+        #     player.yspeed = -player.max_speed_y*(abs(player.gravity)/player.gravity)
 
-        elif self.mode == 6:
-            global level_num
-            global load_new_level
-            if self in portals:
-                level_num += 1
-                load_new_level = True
-                portals.remove(self)
+        # elif self.mode == 6:
+        #     global level_num
+        #     global load_new_level
+        #     if self in portals:
+        #         level_num += 1
+        #         load_new_level = True
+        #         portals.remove(self)
             
     def tick(self):
         for player in players:
@@ -656,8 +660,7 @@ class YellowPortal(Portal):
             if player.yspeed > player.max_speed_y/2:
                 player.yspeed = player.max_speed_y/2
 
-
-class MiniPortal(Portal):
+class NormalPortal(Portal):
     def __init__(self, x, y, width, height, rotation=0):
         self.id = 5
         self.x = x
@@ -667,14 +670,57 @@ class MiniPortal(Portal):
         self.rotation = rotation
         self.contacting = False
         self.rotation = 0
+
+    def apply(self, player):
+        player.set_mini(False)
+
+class MiniPortal(Portal):
+    def __init__(self, x, y, width, height, rotation=0):
+        self.id = 6
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.rotation = rotation
+        self.contacting = False
+        self.rotation = 0
     
     def apply(self, player):
-        print("yellow portal applying")
-        print(self)
-        if player.gravity > 0:
-            player.gravity = -player.gravity
-            if player.yspeed > player.max_speed_y/2:
-                player.yspeed = player.max_speed_y/2
+        player.set_mini(True)
+
+class EndLevelPortal(Portal):
+    def __init__(self, x, y, width, height, rotation=0):
+        self.id = 7
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.rotation = rotation
+        self.contacting = False
+        self.rotation = 0
+    
+    def apply(self, player):
+            global level_num
+            global load_new_level
+            global portals
+            if self in portals:
+                level_num += 1
+                load_new_level = True
+                portals.remove(self)
+
+class BumpPad(Portal):
+    def __init__(self, x, y, width, height, rotation=0):
+        self.id = 8
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.rotation = rotation
+        self.contacting = False
+        self.rotation = 0
+
+    def apply(self, player):
+        player.yspeed = -player.max_speed_y*(abs(player.gravity)/player.gravity)
 
     
 class Level():
@@ -686,7 +732,8 @@ class Level():
 
     def load(self, data):
         #try:
-            important_list = [Object, Obstacle, Hazard, BluePortal, YellowPortal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal]
+            important_list = [Object, Obstacle, Hazard, BluePortal, YellowPortal, NormalPortal, MiniPortal, EndLevelPortal, BumpPad, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal]
+
             data = data.split("/")
 
             self.obstacles = []
@@ -802,6 +849,7 @@ obstacle_default_image = pygame.image.load("resources/images/Larimore_block.png"
 background_default_image = pygame.image.load("resources/images/GJ_Background.jpg")
 menu_background_default_image = pygame.image.load("resources/images/GJ_Menu_Background.png")
 portal_default_image = pygame.image.load("resources/images/blue_portal.png")
+yellow_portal_default_image = pygame.image.load("resources/images/yellow_portal.png")
 
 for player in players:
     player.make_sprite(player_default_image)
@@ -885,7 +933,12 @@ def get_objs_touching(objs, pos, amount):
 def delete_touching(pos):
     obj = get_objs_touching(all_objects(), pos, 1)
     if obj:
-        obstacles.remove(obj)
+        if isinstance(obj, Obstacle):
+            obstacles.remove(obj)
+        if isinstance(obj, Portal):
+            portals.remove(obj)
+        if isinstance(obj, Hazard):
+            hazards.remove(obj)
 
     
 def make_new_object(id_, pos):
@@ -927,7 +980,7 @@ def make_new_object(id_, pos):
     if id_ == ObjectType.YELLOW_PORTAL:
         x, y = get_grid_pos(pos)
         new_portal = YellowPortal(x, y, grid_width/2, grid_height*2)
-        new_portal.make_sprite(portal_default_image)
+        new_portal.make_sprite(yellow_portal_default_image)
         portals.append(new_portal)
 
     if id_ == ObjectType.BLUE_PORTAL:
@@ -938,13 +991,13 @@ def make_new_object(id_, pos):
 
     if id_ == ObjectType.NORMAL_PORTAL:
         x, y = get_grid_pos(pos)
-        new_portal = Portal(x, y, grid_width/2, grid_height*2, 3)
+        new_portal = NormalPortal(x, y, grid_width/2, grid_height*2)
         new_portal.make_sprite(portal_default_image)
         portals.append(new_portal)
 
     if id_ == ObjectType.MINI_PORTAL:
         x, y = get_grid_pos(pos)
-        new_portal = Portal(x, y, grid_width/2, grid_height*2, 4)
+        new_portal = MiniPortal(x, y, grid_width/2, grid_height*2)
         new_portal.make_sprite(portal_default_image)
         portals.append(new_portal)
 
@@ -964,12 +1017,12 @@ def make_new_object(id_, pos):
 
     if id_ == ObjectType.JUMP_PAD:
         x, y = get_special_grid_pos(pos, grid_width, grid_height/2)
-        new_portal = Portal(x, y, grid_width, grid_height/2, 5)
+        new_portal = BumpPad(x, y, grid_width, grid_height/2)
         portals.append(new_portal)
 
     if id_ == ObjectType.END_PORTAL:
         x, y = get_grid_pos(pos)
-        new_portal = Portal(x, y, grid_width/2, grid_height*2, 6)
+        new_portal = EndLevelPortal(x, y, grid_width/2, grid_height*2, 6)
         new_portal.make_sprite(portal_default_image)
         portals.append(new_portal)
         
@@ -991,15 +1044,22 @@ def load_level(level_name):
 
     # Clean this up - repeated code
     #reload_all_sprites() (clean up this should be used instead because its what youre doing but causes error because func def later)
-    for hazard in hazards:
-        hazard.make_sprite(hazard_default_image)
-        hazard.update_sprite()
+    # for hazard in hazards:
+    #     hazard.make_sprite(hazard_default_image)
+    #     hazard.update_sprite()
         
-    for obstacle in obstacles:
-        obstacle.make_sprite(obstacle_default_image)
+    # for obstacle in obstacles:
+    #     obstacle.make_sprite(obstacle_default_image)
 
-    for portal in portals:
-        portal.make_sprite(portal_default_image)
+    # for portal in portals:
+    #     if type(portal) == YellowPortal:
+    #         portal.make_sprite(yellow_portal_default_image)
+    #     else:
+    #         portal.make_sprite(portal_default_image)
+    important_list2 = [obstacle_default_image, obstacle_default_image, hazard_default_image, portal_default_image, yellow_portal_default_image, portal_default_image, portal_default_image, portal_default_image, portal_default_image, portal_default_image, portal_default_image]
+
+    for object in all_objects():
+        object.make_sprite(important_list2[object.id])
         
     for player in players:
         player.die()
@@ -1173,7 +1233,6 @@ class Display:
         
 class Game:
     def __init__(self):
-        self.important_list = [Object, Obstacle, Hazard, BluePortal, YellowPortal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal]
         self.display = Display()
         self.playing = True
         self.in_menu = True
