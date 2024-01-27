@@ -726,9 +726,12 @@ class BumpPad(Portal):
 class Level():
     def __init__(self):
         self.player = Player()
+        
         self.obstacles = []
         self.hazards = []
         self.portals = []
+
+        self.ground = Sprite(pygame.transform.smoothscale(background_default_image, (self.screen_width, self.screen_height)), 0, 0, 0)
 
     def load(self, data):
         #try:
@@ -848,6 +851,7 @@ hazard_default_image = pygame.image.load("resources/images/Larimore_icespike.png
 obstacle_default_image = pygame.image.load("resources/images/Larimore_block.png")
 background_default_image = pygame.image.load("resources/images/GJ_Background.jpg")
 menu_background_default_image = pygame.image.load("resources/images/GJ_Menu_Background.png")
+ground_default_image = pygame.image.load("resources/images/mario_block.jpg")
 portal_default_image = pygame.image.load("resources/images/blue_portal.png")
 yellow_portal_default_image = pygame.image.load("resources/images/yellow_portal.png")
 
@@ -902,7 +906,7 @@ def get_grid_pos(pos, g_width=grid_width, g_height=grid_height):
 def get_mouse_pos():
 
     x, y = pygame.mouse.get_pos()
-    return x/xscale, y/yscale
+    return (x/xscale)+autoscroll_offset_x, (y/yscale)+autoscroll_offset_y
 
 def get_objs_touching(objs, pos, amount):
     touching = []
@@ -933,10 +937,6 @@ def delete_touching(pos):
     
 def make_new_object(id_, pos):
     global objects_editing
-    x, y = pos
-    x = x+autoscroll_offset_x
-    y = y+autoscroll_offset_y
-    pos = (x,y)
     if id_ == ObjectType.DELETE:
         # Clean this up - repeated code
         delete_touching(pos)
@@ -1225,6 +1225,7 @@ class Display:
 class Game:
     def __init__(self):
         self.display = Display()
+
         self.playing = True
         self.in_menu = True
         self.clock = pygame.time.Clock()
