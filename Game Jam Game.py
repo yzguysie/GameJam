@@ -791,7 +791,7 @@ menu_button_width = round(screen_width/5)
 menu_button_height = round(screen_height/5)
 menu_button_x = screen_width/2-menu_button_width/2
 
-menu_buttons = []
+#menu_buttons = []
 
 selected = ObjectType.BLOCK
 
@@ -876,7 +876,7 @@ last_time = time.time()-100
     
 
 def mouse_over_anything():
-    for button in buttons:
+    for button in game.display.buttons:
         if button.mouse_over():
             return True
     for slider in sliders:
@@ -886,7 +886,7 @@ def mouse_over_anything():
             return True
     return False
 
-buttons = []
+#buttons = []
 
 
 sliders = []
@@ -894,22 +894,12 @@ sliders = []
 text_boxes = []
 
 
-def get_grid_pos(pos):
-    global grid_width
-    global grid_height
+def get_grid_pos(pos, g_width=grid_width, g_height=grid_height):
     x, y = pos
-    return x - x%grid_width, y - y%grid_height
-    #y = y - y%grid_height
-    #return x, y
+    return x - x%g_width, y - y%g_height
 
-def get_special_grid_pos(pos, sp_width, sp_height):
-    x, y = pos
-    return x - x%sp_width, y - y%sp_height
-        
 
 def get_mouse_pos():
-    global xscale
-    global yscale
 
     x, y = pygame.mouse.get_pos()
     return x/xscale, y/yscale
@@ -1002,21 +992,21 @@ def make_new_object(id_, pos):
         portals.append(new_portal)
 
     if id_ == ObjectType.SLAB:
-        x, y = get_special_grid_pos(pos, grid_width, grid_height/2)
+        x, y = get_grid_pos(pos, grid_width, grid_height/2)
         new_obstacle = Obstacle(x ,y, grid_width, grid_height/2)
         if obstacle_sprite:
             new_obstacle.make_sprite(obstacle_default_image)
         obstacles.append(new_obstacle)
 
     if id_ == ObjectType.MINI_BLOCK:
-        x, y = get_special_grid_pos(pos, grid_width/2, grid_height/2)
+        x, y = get_grid_pos(pos, grid_width/2, grid_height/2)
         new_obstacle = Obstacle(x ,y, grid_width/2, grid_height/2)
         if obstacle_sprite:
             new_obstacle.make_sprite(obstacle_default_image)
         obstacles.append(new_obstacle)
 
     if id_ == ObjectType.JUMP_PAD:
-        x, y = get_special_grid_pos(pos, grid_width, grid_height/2)
+        x, y = get_grid_pos(pos, grid_width, grid_height/2)
         new_portal = BumpPad(x, y, grid_width, grid_height/2)
         portals.append(new_portal)
 
@@ -1098,6 +1088,8 @@ class Display:
         self.screen_width, self.screen_height = 768, 432
         self.window = pygame.display.set_mode([self.screen_width, self.screen_height], pygame.RESIZABLE)
         self.menus = []
+        self.buttons = []
+        self.menu_buttons = []
         self.edit_mode = False
         self.reload_buttons()
         self.background = Sprite(pygame.transform.smoothscale(background_default_image, (self.screen_width, self.screen_height)), 0, 0, 0)
@@ -1127,7 +1119,6 @@ class Display:
 
     def reload_buttons(self):
         global players
-        global buttons
         
         global save_button
         global load_button
@@ -1135,7 +1126,6 @@ class Display:
 
         global recover_button
 
-        global menu_buttons
         global play_button
         global options_button
         global quit_button
@@ -1147,7 +1137,7 @@ class Display:
         autoscroll_start_x = round(width/3*((self.screen_width/self.screen_height)/16*9))
         autoscroll_end_x = round(2*width/3*((self.screen_width/self.screen_height)/16*9))
         
-        buttons = []
+        self.buttons = []
         button_width = round(self.screen_width/20)
         button_height = round(self.screen_height/30)
         menu_button_width = button_width*4
@@ -1155,33 +1145,34 @@ class Display:
         menu_button_x = self.screen_width/2-menu_button_width/2
         menu_button_y_func = lambda height_factor : self.screen_height/2-menu_button_height * height_factor
         if True:
-            menu_buttons = []
+            self.menu_buttons = []
 
-            play_button = ui.button(menu_button_x, menu_button_y_func(2), menu_button_width, menu_button_height, "PLAY")
-            editor_button = ui.button(menu_button_x, menu_button_y_func(1), menu_button_width, menu_button_height, "LEVEL EDITOR")
-            options_button = ui.button(menu_button_x, menu_button_y_func(0), menu_button_width, menu_button_height, "OPTIONS")
-            quit_button = ui.button(menu_button_x, menu_button_y_func(-1), menu_button_width, menu_button_height, "QUIT")
 
-            menu_buttons.append(play_button)
-            menu_buttons.append(options_button)
-            menu_buttons.append(editor_button)
-            menu_buttons.append(quit_button)
+            self.play_button = ui.button(menu_button_x, menu_button_y_func(2), menu_button_width, menu_button_height, "PLAY")
+            self.editor_button = ui.button(menu_button_x, menu_button_y_func(1), menu_button_width, menu_button_height, "LEVEL EDITOR")
+            self.options_button = ui.button(menu_button_x, menu_button_y_func(0), menu_button_width, menu_button_height, "OPTIONS")
+            self.quit_button = ui.button(menu_button_x, menu_button_y_func(-1), menu_button_width, menu_button_height, "QUIT")
+
+            self.menu_buttons.append(self.play_button)
+            self.menu_buttons.append(self.options_button)
+            self.menu_buttons.append(self.editor_button)
+            self.menu_buttons.append(self.quit_button)
         if True:
-            save_button = ui.button(self.screen_width-button_width*2, 0, button_width, button_height, "save", partial(set_saving_loading, True, False))
-            load_button = ui.button(self.screen_width-button_width, 0, button_width, button_height, "load", partial(set_saving_loading, False, True))
-            reset_button = ui.button(self.screen_width-button_width*2, button_height, button_width, button_height, "reset", partial(set_level, Level()))
-            delete_button = ui.button(0, (button_height+5), button_width, button_height, "delete", partial(set_selected_object, ObjectType.DELETE))
-            block_button = ui.button((button_width+5)*0, (button_height+5)*2, button_width, button_height, "block", partial(set_selected_object, ObjectType.BLOCK), obstacle_default_image)
-            slab_button = ui.button((button_width+5)*1, (button_height+5)*2, button_width, button_height, "slab", partial(set_selected_object, ObjectType.SLAB))
-            mini_block_button = ui.button((button_width+5)*2, (button_height+5)*2, button_width, button_height, "mini block", partial(set_selected_object, ObjectType.MINI_BLOCK))
-            spike_button = ui.button((button_width+5)*3, (button_height+5)*2, button_width, button_height, "spike", partial(set_selected_object, ObjectType.SPIKE), hazard_default_image)
-            yellow_portal_button = ui.button(0, (button_height+5)*3, button_width*2, button_height, "upside down portal", partial(set_selected_object, ObjectType.YELLOW_PORTAL))
-            blue_portal_button = ui.button((button_width+5)*2, (button_height+5)*3, button_width*2, button_height, "rightside up portal", partial(set_selected_object, ObjectType.BLUE_PORTAL))
-            mini_portal_button = ui.button((button_width+5)*0, (button_height+5)*4, button_width, button_height, "Mini portal", partial(set_selected_object, ObjectType.MINI_PORTAL))
-            normal_portal_button = ui.button((button_width+5)*1, (button_height+5)*4, button_width, button_height, "Normal portal", partial(set_selected_object, ObjectType.NORMAL_PORTAL))
-            end_portal_button = ui.button((button_width+5)*2, (button_height+5)*4, button_width, button_height, "End portal", partial(set_selected_object, ObjectType.END_PORTAL))
-            jump_pad_button = ui.button((button_width+5)*3, (button_height+5)*4, button_width, button_height, "Jump pad", partial(set_selected_object, ObjectType.JUMP_PAD))
-            select_button = ui.button((button_width+5)*4, (button_height+5)*4, button_width, button_height, "select", partial(set_selected_object, ObjectType.SELECT))
+            self.save_button = ui.button(self.screen_width-button_width*2, 0, button_width, button_height, "save", partial(set_saving_loading, True, False))
+            self.load_button = ui.button(self.screen_width-button_width, 0, button_width, button_height, "load", partial(set_saving_loading, False, True))
+            self.reset_button = ui.button(self.screen_width-button_width*2, button_height, button_width, button_height, "reset", partial(set_level, Level()))
+            self.delete_button = ui.button(0, (button_height+5), button_width, button_height, "delete", partial(set_selected_object, ObjectType.DELETE))
+            self.block_button = ui.button((button_width+5)*0, (button_height+5)*2, button_width, button_height, "block", partial(set_selected_object, ObjectType.BLOCK), obstacle_default_image)
+            self.slab_button = ui.button((button_width+5)*1, (button_height+5)*2, button_width, button_height, "slab", partial(set_selected_object, ObjectType.SLAB))
+            self.mini_block_button = ui.button((button_width+5)*2, (button_height+5)*2, button_width, button_height, "mini block", partial(set_selected_object, ObjectType.MINI_BLOCK))
+            self.spike_button = ui.button((button_width+5)*3, (button_height+5)*2, button_width, button_height, "spike", partial(set_selected_object, ObjectType.SPIKE), hazard_default_image)
+            self.yellow_portal_button = ui.button(0, (button_height+5)*3, button_width*2, button_height, "upside down portal", partial(set_selected_object, ObjectType.YELLOW_PORTAL))
+            self.blue_portal_button = ui.button((button_width+5)*2, (button_height+5)*3, button_width*2, button_height, "rightside up portal", partial(set_selected_object, ObjectType.BLUE_PORTAL))
+            self.mini_portal_button = ui.button((button_width+5)*0, (button_height+5)*4, button_width, button_height, "Mini portal", partial(set_selected_object, ObjectType.MINI_PORTAL))
+            self.normal_portal_button = ui.button((button_width+5)*1, (button_height+5)*4, button_width, button_height, "Normal portal", partial(set_selected_object, ObjectType.NORMAL_PORTAL))
+            self.end_portal_button = ui.button((button_width+5)*2, (button_height+5)*4, button_width, button_height, "End portal", partial(set_selected_object, ObjectType.END_PORTAL))
+            self.jump_pad_button = ui.button((button_width+5)*3, (button_height+5)*4, button_width, button_height, "Jump pad", partial(set_selected_object, ObjectType.JUMP_PAD))
+            self.select_button = ui.button((button_width+5)*4, (button_height+5)*4, button_width, button_height, "select", partial(set_selected_object, ObjectType.SELECT))
 
             slots = 16
 
@@ -1193,27 +1184,27 @@ class Display:
                 new_button_y = button_height*((i+3)//2)
                 new_button = ui.button(new_button_x, new_button_y, button_width, button_height, f"Slot {i}", partial(on_slot_clicked, i))
                 if self.edit_mode:
-                    buttons.append(new_button)
+                    self.buttons.append(new_button)
 
-            recover_button = ui.button(self.screen_width-button_width, button_height, button_width, button_height, "Recover", partial(load_level, 'autosave'))
+            self.recover_button = ui.button(self.screen_width-button_width, button_height, button_width, button_height, "Recover", partial(load_level, 'autosave'))
 
             if self.edit_mode:
-                buttons.append(save_button)
-                buttons.append(load_button)
-                buttons.append(reset_button)
-                buttons.append(recover_button)
-                buttons.append(delete_button)
-                buttons.append(select_button)
-                buttons.append(block_button)
-                buttons.append(mini_block_button)
-                buttons.append(spike_button)
-                buttons.append(yellow_portal_button)
-                buttons.append(blue_portal_button)
-                buttons.append(mini_portal_button)
-                buttons.append(normal_portal_button)
-                buttons.append(end_portal_button)
-                buttons.append(slab_button)
-                buttons.append(jump_pad_button)
+                self.buttons.append(self.save_button)
+                self.buttons.append(self.load_button)
+                self.buttons.append(self.reset_button)
+                self.buttons.append(self.recover_button)
+                self.buttons.append(self.delete_button)
+                self.buttons.append(self.select_button)
+                self.buttons.append(self.block_button)
+                self.buttons.append(self.mini_block_button)
+                self.buttons.append(self.spike_button)
+                self.buttons.append(self.yellow_portal_button)
+                self.buttons.append(self.blue_portal_button)
+                self.buttons.append(self.mini_portal_button)
+                self.buttons.append(self.normal_portal_button)
+                self.buttons.append(self.end_portal_button)
+                self.buttons.append(self.slab_button)
+                self.buttons.append(self.jump_pad_button)
 
     def reload_all_sprites(self):
         for player in players:
@@ -1261,26 +1252,26 @@ class Game:
                     self.playing = False
                     break
                 
-        for button in menu_buttons:
+        for button in self.display.menu_buttons:
             button.draw(self.display.window)
             if button.get_clicked():
                 # Clean this up - use button onclick()
-                if button == play_button:
+                if button == self.display.play_button:
                     self.display.set_play_mode()
                     self.playing = True
                     self.in_menu = False
                     self.display.reload_buttons()
                     
-                elif button == options_button:
+                elif button == self.display.options_button:
                     pass
             
-                elif button == editor_button:
+                elif button == self.display.editor_button:
                     self.display.set_edit_mode()
                     self.playing = True
                     self.in_menu = False
                     self.display.reload_buttons()
 
-                elif button == quit_button:
+                elif button == self.display.quit_button:
                     self.in_menu = False
                     self.playing = False
                     break
@@ -1439,7 +1430,7 @@ class Game:
                 box.events = events
                 box.tick()
                 
-            for button in buttons:
+            for button in game.display.buttons:
                 #global saving_level
                 #global loading_level
                 button.draw(self.display.window)
