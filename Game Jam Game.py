@@ -95,7 +95,7 @@ world_height_limit = -5000
 def example_func(i):
         print(i)
         
-class Sprite():
+class Sprite:
     def __init__(self, image, x, y, rotation):
         self.x = x
         self.y = y
@@ -104,6 +104,7 @@ class Sprite():
         self.last_rotation = rotation
         self.target_rotation = rotation
         self.image = pygame.transform.rotate(self.ogimage, self.rotation)
+        pygame.transform.scale
         self.centered = False
 
     def draw(self, window):
@@ -118,15 +119,9 @@ class Sprite():
     def set_centered(self, centered):
         self.centered = centered
 
-class Object:
-    def __init__(self, x, y, width=grid_width, height=grid_height, rotation=0):
-        self.id = 0
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
-        self.rotation = rotation
-        self.sprite = None
+
+
+class Drawable:
 
     def make_sprite(self, image, centered=False):
         image = pygame.transform.smoothscale(image, (round(self.width*xscale), round(self.height*yscale)))
@@ -143,7 +138,21 @@ class Object:
     def draw(self, window):
         self.update_sprite()
         self.sprite.draw(window)
-    
+
+
+
+
+class Object(Drawable):
+
+    def __init__(self, x, y, width=grid_width, height=grid_height, rotation=0):
+        self.id = 0
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.rotation = rotation
+        self.sprite = None
+
 
     def is_colliding(self, object):
         if object.x+object.width > self.x and object.x < self.x+self.width:
@@ -151,11 +160,16 @@ class Object:
                 return True
         return False
     
+    
     def __repr__(self):
         info = [str(self.id), str(self.x), str(self.y), str(self.width), str(self.height), str(self.rotation)]
         return "@".join(info)
+    
+
+
 
 class Player(Object):
+
     def __init__(self):
         self.x = 0  # consider x and y combined with a position struct, self.pos.x, self.pos.y
         self.xspeed = 0 # consider a Velocity struct (vector) with x and y components
@@ -731,7 +745,6 @@ class Level():
         self.hazards = []
         self.portals = []
 
-        self.ground = Sprite(pygame.transform.smoothscale(background_default_image, (self.screen_width, self.screen_height)), 0, 0, 0)
 
     def load(self, data):
         #try:
@@ -1083,6 +1096,36 @@ load_level(f'slot_{level_num}')
 load_new_level = False
 
 
+
+
+
+# class Ground(Drawable):
+
+#     def __init__(self, image_file):
+#         self.x = 0
+#         self.y = 0
+#         self.width = 100
+#         self.height = 100
+#         self.rotation = 0
+#         self.image_file = image_file
+#         self.make_sprite(image_file)
+    
+
+#     def tick(self):
+#         #self.x = -autoscroll_offset_x*yscale
+#         #self.y = (game.display.screen_height-autoscroll_offset_y*yscale)
+#         self.width = game.display.screen_width
+#         self.height = game.display.screen_height
+#         if self.sprite.image.get_width() != round(self.width*xscale) or self.sprite.image.get_height() != round(self.height*yscale):
+#             print(self.sprite.image.get_width())
+#             print(self.width*xscale)
+#             self.make_sprite(self.image_file)
+#             print("siga")
+#         self.draw(game.display.window)
+
+
+
+
 class Display:
     def __init__(self):
         self.screen_width, self.screen_height = 768, 432
@@ -1094,6 +1137,7 @@ class Display:
         self.reload_buttons()
         self.background = Sprite(pygame.transform.smoothscale(background_default_image, (self.screen_width, self.screen_height)), 0, 0, 0)
         self.menu_background = Sprite(pygame.transform.smoothscale(menu_background_default_image, (self.screen_width, self.screen_height)), 0, 0, 0)
+        self.ground = Sprite(pygame.transform.smoothscale(menu_background_default_image, (self.screen_width*2, self.screen_height)), 0, 0, 0)
 
     def set_edit_mode(self):
         self.edit_mode = True
@@ -1221,6 +1265,7 @@ class Display:
 
         self.background = Sprite(pygame.transform.smoothscale(background_default_image, (self.screen_width, self.screen_height)), 0, 0, 0)
         self.menu_background = Sprite(pygame.transform.smoothscale(menu_background_default_image, (self.screen_width, self.screen_height)), 0, 0, 0)
+        self.ground = Sprite(pygame.transform.smoothscale(menu_background_default_image, (self.screen_width*2, self.screen_height)), 0, 0, 0)
         
 class Game:
     def __init__(self):
@@ -1377,6 +1422,19 @@ class Game:
             
             self.display.window.fill(BACKGROUND_COLOR)
             self.display.background.draw(self.display.window)
+            self.display.ground.x = -autoscroll_offset_x*yscale
+            self.display.ground.y = (self.display.screen_height-autoscroll_offset_y*yscale)
+
+            while self.display.ground.x > 0:
+                self.display.ground.x -= self.display.ground.image.get_width()/2
+            while self.display.ground.x+self.display.ground.image.get_width() < self.display.screen_width:
+                self.display.ground.x += self.display.ground.image.get_width()/2
+
+            
+            self.display.ground.draw(self.display.window)
+
+
+
 
             if load_new_level:
                 load_level(f'slot_{level_num}')
