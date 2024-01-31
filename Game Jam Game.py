@@ -864,7 +864,8 @@ hazard_default_image = pygame.image.load("resources/images/Larimore_icespike.png
 obstacle_default_image = pygame.image.load("resources/images/Larimore_block.png")
 background_default_image = pygame.image.load("resources/images/GJ_Background.jpg")
 menu_background_default_image = pygame.image.load("resources/images/GJ_Menu_Background.png")
-ground_default_image = pygame.image.load("resources/images/mario_block.jpg")
+ground_default_image = pygame.image.load("resources/images/GrassGround.png")
+ceiling_default_image = pygame.image.load("resources/images/tiles.png")
 portal_default_image = pygame.image.load("resources/images/blue_portal.png")
 yellow_portal_default_image = pygame.image.load("resources/images/yellow_portal.png")
 
@@ -1137,7 +1138,8 @@ class Display:
         self.reload_buttons()
         self.background = Sprite(pygame.transform.smoothscale(background_default_image, (self.screen_width, self.screen_height)), 0, 0, 0)
         self.menu_background = Sprite(pygame.transform.smoothscale(menu_background_default_image, (self.screen_width, self.screen_height)), 0, 0, 0)
-        self.ground = Sprite(pygame.transform.smoothscale(menu_background_default_image, (self.screen_width*2, self.screen_height)), 0, 0, 0)
+        self.ground = Sprite(pygame.transform.scale(ground_default_image, (self.screen_width*2, self.screen_width/2)), 0, 0, 0)
+        self.ceiling = Sprite(pygame.transform.scale(ceiling_default_image, (self.screen_width*2, self.screen_width/2)), 0, 0, 0)
 
     def set_edit_mode(self):
         self.edit_mode = True
@@ -1265,7 +1267,8 @@ class Display:
 
         self.background = Sprite(pygame.transform.smoothscale(background_default_image, (self.screen_width, self.screen_height)), 0, 0, 0)
         self.menu_background = Sprite(pygame.transform.smoothscale(menu_background_default_image, (self.screen_width, self.screen_height)), 0, 0, 0)
-        self.ground = Sprite(pygame.transform.smoothscale(menu_background_default_image, (self.screen_width*2, self.screen_height)), 0, 0, 0)
+        self.ground = Sprite(pygame.transform.smoothscale(ground_default_image, (self.screen_width*2, self.screen_height)), 0, 0, 0)
+        self.ceiling = Sprite(pygame.transform.scale(ceiling_default_image, (self.screen_width*2, self.screen_height)), 0, 0, 0)
         
 class Game:
     def __init__(self):
@@ -1424,14 +1427,30 @@ class Game:
             self.display.background.draw(self.display.window)
             self.display.ground.x = -autoscroll_offset_x*yscale
             self.display.ground.y = (self.display.screen_height-autoscroll_offset_y*yscale)
+            
 
             while self.display.ground.x > 0:
                 self.display.ground.x -= self.display.ground.image.get_width()/2
             while self.display.ground.x+self.display.ground.image.get_width() < self.display.screen_width:
                 self.display.ground.x += self.display.ground.image.get_width()/2
+            
+            self.display.ceiling.x = -autoscroll_offset_x*yscale
+
+            while self.display.ceiling.x > 0:
+                self.display.ceiling.x -= self.display.ceiling.image.get_width()/2
+            while self.display.ceiling.x + self.display.ceiling.image.get_width() < self.display.screen_width:
+                self.display.ceiling.x += self.display.ceiling.image.get_width()/2
+
+
+            self.display.ceiling.y = (world_height_limit*yscale-autoscroll_offset_y*yscale-self.display.screen_height)
+            #print(self.display.ceiling.y)
+            
+
+            
 
             
             self.display.ground.draw(self.display.window)
+            self.display.ceiling.draw(self.display.window)
 
 
 
