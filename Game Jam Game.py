@@ -94,7 +94,7 @@ world_height_limit = -5000
 
 def example_func(i):
         print(i)
-        
+
 class Sprite:
     def __init__(self, image, x, y, rotation):
         self.x = x
@@ -104,11 +104,12 @@ class Sprite:
         self.last_rotation = rotation
         self.target_rotation = rotation
         self.image = pygame.transform.rotate(self.ogimage, self.rotation)
-        pygame.transform.scale
         self.centered = False
 
     def draw(self, window):
-        self.image = pygame.transform.rotate(self.ogimage, self.rotation)
+        if self.rotation != self.last_rotation:
+            self.image = pygame.transform.rotate(self.ogimage, self.rotation)
+            self.last_rotation = self.rotation
         if self.centered:
             window.blit(self.image, (self.x-self.image.get_width()/2, self.y-self.image.get_height()/2))
         else:
@@ -1121,7 +1122,6 @@ load_new_level = False
 #             print(self.sprite.image.get_width())
 #             print(self.width*xscale)
 #             self.make_sprite(self.image_file)
-#             print("siga")
 #         self.draw(game.display.window)
 
 
@@ -1152,16 +1152,15 @@ class Display:
 
     def check_window_resize(self):
         global xscale, yscale, real_xscale
-        if self.screen_width != pygame.display.get_surface().get_width() or self.screen_height != pygame.display.get_surface().get_height():
-                
-            self.screen_width = pygame.display.get_surface().get_width()
-            self.screen_height = pygame.display.get_surface().get_height()
-            xscale = self.screen_width/width
-            real_xscale = self.screen_width/width
-            yscale = self.screen_height/height
-            xscale = yscale
-            self.reload_buttons()
-            self.reload_all_sprites()
+            
+        self.screen_width = pygame.display.get_surface().get_width()
+        self.screen_height = pygame.display.get_surface().get_height()
+        xscale = self.screen_width/width
+        real_xscale = self.screen_width/width
+        yscale = self.screen_height/height
+        xscale = yscale
+        self.reload_buttons()
+        self.reload_all_sprites()
 
     def reload_buttons(self):
         global players
@@ -1267,7 +1266,7 @@ class Display:
 
         self.background = Sprite(pygame.transform.smoothscale(background_default_image, (self.screen_width, self.screen_height)), 0, 0, 0)
         self.menu_background = Sprite(pygame.transform.smoothscale(menu_background_default_image, (self.screen_width, self.screen_height)), 0, 0, 0)
-        self.ground = Sprite(pygame.transform.smoothscale(ground_default_image, (self.screen_width*2, self.screen_height)), 0, 0, 0)
+        self.ground = Sprite(pygame.transform.scale(ground_default_image, (self.screen_width*2, self.screen_height)), 0, 0, 0)
         self.ceiling = Sprite(pygame.transform.scale(ceiling_default_image, (self.screen_width*2, self.screen_height)), 0, 0, 0)
         
 class Game:
@@ -1286,7 +1285,6 @@ class Game:
         self.menus.append(ex_menu)
 
     def main_menu(self):
-        global editing
         self.display.window.fill(BACKGROUND_COLOR)
         self.display.menu_background.draw(self.display.window)
         events = pygame.event.get()
@@ -1301,6 +1299,9 @@ class Game:
                     self.playing = False
                     break
                 
+            elif event.type == pygame.VIDEORESIZE:
+                self.display.check_window_resize()
+
         for button in self.display.menu_buttons:
             button.draw(self.display.window)
             if button.get_clicked():
@@ -1335,6 +1336,10 @@ class Game:
             if event.type == pygame.QUIT:
                 self.playing = False
                 break
+
+            elif event.type == pygame.VIDEORESIZE:
+                self.display.check_window_resize()
+
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     self.in_menu = True
@@ -1413,7 +1418,7 @@ class Game:
         global autoscroll_offset_x, autoscroll_offset_y
 
         while self.playing:
-            self.display.check_window_resize()
+            #self.display.check_window_resize()
                 
             if self.in_menu:
                 self.main_menu()
@@ -1461,7 +1466,6 @@ class Game:
         
             events = pygame.event.get()
             self.handle_events(events)
-                            
             if tickrate < fps:
                 if frames%(int(fps/tickrate))==0:
                     for object in all_objects():
@@ -1474,6 +1478,7 @@ class Game:
                         object.tick()
                     for player in players:  
                         player.tick()
+
 
             for object in all_objects():
                 object.draw(self.display.window)
