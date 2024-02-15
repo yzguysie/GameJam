@@ -6,14 +6,11 @@ from enum import Enum
 
 pygame.init()
 
-mixer.init()
+pygame.mixer.init()
 import random
 import math
 import time
-import winsound
 import ui
-import os
-#from win32gui import FindWindow, GetWindowRect
     
 from configparser import ConfigParser
 
@@ -469,8 +466,7 @@ class Player(Object):
 
 
     def jump(self):
-        #dislike_sfx = pygame.mixer.Sound("dislike.mp3")
-        #dislike_sfx.play()
+        jump_sound.play()
         if self.mini:
             self.yspeed = -self.mini_jump_height*(abs(self.gravity)/self.gravity)
         else:
@@ -582,64 +578,17 @@ class Portal(Object):
         self.contacting = False
         self.rotation = 0
 
-        # #clean this up: make every portal type have a image which goes in a list called ex. images and self.sprite = Sprite(images[mode])
-
-    #def __repr__(self):
-        # Clean this up - unreadable (what is f)
-        #info = [str(self.id), str(self.x), str(self.y), str(self.width), str(self.height), str(self.rotation)]
-        #return "@".join(info)
-        # f = "@"
-        # return str(self.x) + f + str(self.y) + f + str(self.width) + f + str(self.height) + f + str(self.mode) + f + str(self.rotation)
 
     def apply(self, player):
         pass
-        # if self.mode == 1:
-        #     if player.gravity > 0:
-        #         player.gravity = -player.gravity
-        #         if player.yspeed > player.max_speed_y/2:
-        #             player.yspeed = player.max_speed_y/2
 
-        # elif self.mode == 2:
-        #     if player.gravity < 0:
-        #         player.gravity = -player.gravity
-        #         if player.yspeed < -player.max_speed_y/2:
-        #             player.yspeed = -player.max_speed_y/2
-
-        # if self.mode == 3:
-        #     #clean this up - why does player mini need to be set to False if you are calling to set it to false. Tested and when remove this line the portals simply don't work.
-        #     player.set_mini(False)
-
-        # elif self.mode == 4:
-        #     player.set_mini(True)
-
-        # if self.mode == 5:
-        #     player.yspeed = -player.max_speed_y*(abs(player.gravity)/player.gravity)
-
-        # elif self.mode == 6:
-        #     global level_num
-        #     global load_new_level
-        #     if self in portals:
-        #         level_num += 1
-        #         load_new_level = True
-        #         portals.remove(self)
             
     def tick(self):
         for player in players:
             if self.is_colliding(player):
                 self.apply(player)
 
-    # def check_collision(self, player):
-    #     if player.x+player.width > self.x and player.x < self.x+self.width:
-    #         if player.y+player.height > self.y and player.y < self.y+self.height:
-    #             return True
-    #     return False
-
-    # def draw(self, window):
-    #     self.update_sprite()
-    #     self.sprite.draw(window)
-        
-    #     if show_hitboxes:
-    #         pygame.gfxdraw.rectangle(window, (round((self.x-autoscroll_offset_x)*xscale), round((self.y-autoscroll_offset_y)*yscale), round(self.width*xscale), round(self.height*yscale)), Colors.red)
+   
 
 class BluePortal(Portal):
     def __init__(self, x, y, width, height, rotation=0):
@@ -654,7 +603,7 @@ class BluePortal(Portal):
 
     def apply(self, player):
         if player.gravity < 0:
-            player.gravity = -player.gravity
+            player.gravity *= -1
             if player.yspeed < -player.max_speed_y/2:
                 player.yspeed = -player.max_speed_y/2
 
@@ -671,7 +620,7 @@ class YellowPortal(Portal):
 
     def apply(self, player):
         if player.gravity > 0:
-            player.gravity = -player.gravity
+            player.gravity *= -1
             if player.yspeed > player.max_speed_y/2:
                 player.yspeed = player.max_speed_y/2
 
@@ -794,21 +743,16 @@ def set_level(level):
         print("Level corrupted")
 
 def save_level():
-    #global player
-    #global obstacles
-    
-    data = ""
-    strobjects = []
+
+    object_data = []
     for object in all_objects():
-        strobjects.append(repr(object))
-    data += "/".join(strobjects)
-    return data
+        object_data.append(repr(object))
+    return "/".join(object_data)
 
 menu_button_width = round(screen_width/5)
 menu_button_height = round(screen_height/5)
 menu_button_x = screen_width/2-menu_button_width/2
 
-#menu_buttons = []
 
 selected = ObjectType.BLOCK
 
@@ -819,7 +763,6 @@ def set_selected_object(obj):
     print(f"called with: {obj}")
     selected = obj
 
-loading_level = False
 loading_level = False
 
 def on_slot_clicked(slot):
@@ -869,6 +812,10 @@ ground_default_image = pygame.image.load("resources/images/snowground.png")
 ceiling_default_image = pygame.image.load("resources/images/tiles.png")
 portal_default_image = pygame.image.load("resources/images/blue_portal.png")
 yellow_portal_default_image = pygame.image.load("resources/images/yellow_portal.png")
+
+
+game_default_music = pygame.mixer.Sound("resources/sounds/ez.mp3")
+jump_sound = pygame.mixer.Sound("resources/sounds/smb_jump1.wav")
 
 for player in players:
     player.make_sprite(player_default_image)
@@ -952,6 +899,7 @@ def delete_touching(pos):
     
 def make_new_object(id_, pos):
     global objects_editing
+    x, y = get_grid_pos(pos)
     if id_ == ObjectType.DELETE:
         # Clean this up - repeated code
         delete_touching(pos)
@@ -969,39 +917,33 @@ def make_new_object(id_, pos):
         
         #CLEAN UP - you NEED to put every object in one list bro (ok i did but kinda in a bad way so fix that now)
     if id_ == ObjectType.BLOCK:
-        x, y = get_grid_pos(pos)
         new_obstacle = Obstacle(x ,y, grid_width, grid_height)
         if obstacle_sprite:
             new_obstacle.make_sprite(obstacle_default_image)
         obstacles.append(new_obstacle)
 
     if id_ == ObjectType.SPIKE:
-        x, y = get_grid_pos(pos)
         new_spike = Hazard(x, y, grid_width, grid_height)
         if hazard_sprite:
             new_spike.make_sprite(hazard_default_image)
         hazards.append(new_spike)
 
     if id_ == ObjectType.YELLOW_PORTAL:
-        x, y = get_grid_pos(pos)
         new_portal = YellowPortal(x, y, grid_width/2, grid_height*2)
         new_portal.make_sprite(yellow_portal_default_image)
         portals.append(new_portal)
 
     if id_ == ObjectType.BLUE_PORTAL:
-        x, y = get_grid_pos(pos)
         new_portal = BluePortal(x, y, grid_width/2, grid_height*2)
         new_portal.make_sprite(portal_default_image)
         portals.append(new_portal)
 
     if id_ == ObjectType.NORMAL_PORTAL:
-        x, y = get_grid_pos(pos)
         new_portal = NormalPortal(x, y, grid_width/2, grid_height*2)
         new_portal.make_sprite(portal_default_image)
         portals.append(new_portal)
 
     if id_ == ObjectType.MINI_PORTAL:
-        x, y = get_grid_pos(pos)
         new_portal = MiniPortal(x, y, grid_width/2, grid_height*2)
         new_portal.make_sprite(portal_default_image)
         portals.append(new_portal)
@@ -1021,12 +963,10 @@ def make_new_object(id_, pos):
         obstacles.append(new_obstacle)
 
     if id_ == ObjectType.JUMP_PAD:
-        x, y = get_grid_pos(pos, grid_width, grid_height/2)
         new_portal = BumpPad(x, y, grid_width, grid_height/2)
         portals.append(new_portal)
 
     if id_ == ObjectType.END_PORTAL:
-        x, y = get_grid_pos(pos)
         new_portal = EndLevelPortal(x, y, grid_width/2, grid_height*2, 6)
         new_portal.make_sprite(portal_default_image)
         portals.append(new_portal)
@@ -1047,20 +987,7 @@ def load_level(level_name):
     level.load(saved_level_data)
     set_level(level)
 
-    # Clean this up - repeated code
-    #reload_all_sprites() (clean up this should be used instead because its what youre doing but causes error because func def later)
-    # for hazard in hazards:
-    #     hazard.make_sprite(hazard_default_image)
-    #     hazard.update_sprite()
-        
-    # for obstacle in obstacles:
-    #     obstacle.make_sprite(obstacle_default_image)
 
-    # for portal in portals:
-    #     if type(portal) == YellowPortal:
-    #         portal.make_sprite(yellow_portal_default_image)
-    #     else:
-    #         portal.make_sprite(portal_default_image)
     important_list2 = [obstacle_default_image, obstacle_default_image, hazard_default_image, portal_default_image, yellow_portal_default_image, portal_default_image, portal_default_image, portal_default_image, portal_default_image, portal_default_image, portal_default_image]
 
     for object in all_objects():
@@ -1073,11 +1000,6 @@ def load_level(level_name):
     #    print(f"Failed to load level {level_name}")
 
 
-# def reload_hazard_sprite(hazard):
-#         cube_width, cube_height = round(hazard.width*xscale), round(hazard.height*yscale)
-#         cube_image = pygame.transform.scale(hazard_default_image, (cube_width, cube_height))
-#         cube_rotation = 0
-#         hazard.sprite = Sprite(cube_image, hazard.x*xscale, hazard.y*yscale, hazard.rotation)
 
 
 
@@ -1101,28 +1023,6 @@ load_new_level = False
 
 
 
-# class Ground(Drawable):
-
-#     def __init__(self, image_file):
-#         self.x = 0
-#         self.y = 0
-#         self.width = 100
-#         self.height = 100
-#         self.rotation = 0
-#         self.image_file = image_file
-#         self.make_sprite(image_file)
-    
-
-#     def tick(self):
-#         #self.x = -autoscroll_offset_x*yscale
-#         #self.y = (game.display.screen_height-autoscroll_offset_y*yscale)
-#         self.width = game.display.screen_width
-#         self.height = game.display.screen_height
-#         if self.sprite.image.get_width() != round(self.width*xscale) or self.sprite.image.get_height() != round(self.height*yscale):
-#             print(self.sprite.image.get_width())
-#             print(self.width*xscale)
-#             self.make_sprite(self.image_file)
-#         self.draw(game.display.window)
 
 
 
@@ -1255,14 +1155,12 @@ class Display:
         for player in players:
             player.make_sprite(player_default_image)
 
-        for hazard in hazards:
-            hazard.make_sprite(hazard_default_image)
+        important_list2 = [obstacle_default_image, obstacle_default_image, hazard_default_image, portal_default_image, yellow_portal_default_image, portal_default_image, portal_default_image, portal_default_image, portal_default_image, portal_default_image, portal_default_image]
 
-        for obstacle in obstacles:
-            obstacle.make_sprite(obstacle_default_image)
+        for object in all_objects():
+            object.make_sprite(important_list2[object.id])
+        
 
-        for portal in portals:
-            portal.make_sprite(portal_default_image)
 
         self.background = Sprite(pygame.transform.smoothscale(background_default_image, (self.screen_width, self.screen_height)), 0, 0, 0)
         self.menu_background = Sprite(pygame.transform.smoothscale(menu_background_default_image, (self.screen_width, self.screen_height)), 0, 0, 0)
@@ -1332,7 +1230,6 @@ class Game:
     def handle_events(self, events):
         mouse_pos = get_mouse_pos()
         for event in events:
-            #global saving_level
             if event.type == pygame.QUIT:
                 self.playing = False
                 break
@@ -1343,7 +1240,6 @@ class Game:
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     self.in_menu = True
-                    #self.playing = False
                     break
             
 
@@ -1351,8 +1247,7 @@ class Game:
                     save_all_levels(num_levels)
 
                 if self.display.is_edit_mode():
-                    # if event.key == pygame.K_s:
-                    #     saving_level = True
+
                     if event.key == pygame.K_w:
                         for obj in objects_editing:
                             obj.y -= grid_height  
@@ -1369,10 +1264,7 @@ class Game:
                         for obj in objects_editing:
                             obj.x += grid_width
                 
-                    # elif event.key == pygame.K_l:
-                    #     loading_level = True
-                        
-                    # Clean this up - put keys and their actions into lists and get indexof key which corresponds to indexof action
+
                     elif event.key == pygame.K_0:
                         make_new_object(ObjectType.DELETE, mouse_pos)
 
@@ -1409,7 +1301,7 @@ class Game:
                             obj.rotation %= 360
 
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if not mouse_over_anything() and self.display.is_edit_mode():
+                if self.display.is_edit_mode() and not mouse_over_anything():
                     make_new_object(selected, mouse_pos)
 
     def play(self):
@@ -1418,7 +1310,6 @@ class Game:
         global autoscroll_offset_x, autoscroll_offset_y
 
         while self.playing:
-            #self.display.check_window_resize()
                 
             if self.in_menu:
                 self.main_menu()
@@ -1448,7 +1339,6 @@ class Game:
 
 
             self.display.ceiling.y = (world_height_limit*yscale-autoscroll_offset_y*yscale-self.display.screen_height)
-            #print(self.display.ceiling.y)
             
 
             
@@ -1484,11 +1374,10 @@ class Game:
                 object.draw(self.display.window)
             for player in players:  
                 player.draw(self.display.window)
-            #Nvm don't Clean up - don't fix this because you already did lol()())()())()()(the obstacles will always be before the others and will always be selected first, so obstacles must be deleted to select hazards/portals on the same grid space
-            #objects = obstacles+hazards+portals
 
-            # Clean this up - put into func
-                
+
+            # Clean up - Put this into a func
+                                
             pivot_x = players[0].x+players[0].width/2+players[0].interpolation_offset_x-autoscroll_offset_x
 
             pivot_y = players[0].y+players[0].height/2+players[0].interpolation_offset_y-autoscroll_offset_y
@@ -1514,10 +1403,8 @@ class Game:
                 box.tick()
                 
             for button in game.display.buttons:
-                #global saving_level
-                #global loading_level
-                button.draw(self.display.window)
                 button.get_clicked()
+                button.draw(self.display.window)
             
             dialogue = dialogue_font.render("FPS: " + str(fps_), True, Colors.white)
             dialogue_rect = dialogue.get_rect()
