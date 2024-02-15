@@ -213,12 +213,6 @@ class Player(Object):
         # Clean this up - repeated code and loads every time player dies
         self.make_sprite(player_default_image)
 
-    # def set_sprite(self, image):
-    #     #Clean this up - does same thing as make_sprite
-    #     sprite_width, sprite_height = round(self.width*xscale), round(self.height*yscale)
-    #     sprite_image = pygame.transform.smoothscale(image, (sprite_width, sprite_height))
-    #     self.sprite = Sprite(sprite_image, self.x*xscale, self.y*yscale, self.rotation)
-    #     self.sprite.set_centered(False)
        
     def draw(self, window):
         self.do_rotation()
@@ -536,31 +530,6 @@ class Hazard(Object):
         self.type = 1
         self.rotation = 0
 
-
-        # f = "@"
-        # return str(self.x) + f + str(self.y) + f + str(self.width) + f + str(self.height) + f + str(self.rotation) + f + str(self.type) + f + str(self.color)
-    
-    # def draw(self, window):
-    #     if show_hitboxes:
-    #         pygame.gfxdraw.rectangle(window, (round((self.x+self.width/4-autoscroll_offset_x)*xscale), round((self.y+self.height/4-autoscroll_offset_y)*yscale), round(self.width/2*xscale), round(self.height/2*yscale)), Colors.red)
-
-    #     if hazard_sprite:
-    #         self.update_sprite()
-    #         self.sprite.draw(window)
-    #         return
-    #     if self.type == 1:
-    #         outline = .667
-    #         color = (self.color[0]*outline, self.color[1]*outline, self.color[2]*outline)
-    #         if self.rotation < 180:
-    #             pygame.gfxdraw.filled_trigon(window, round(self.x*xscale), round((self.y+self.height-self.height*(self.rotation/180))*yscale), round((self.x+self.width/2+self.width/2*(self.rotation/180))*xscale), round((self.y+self.height*(self.rotation/180))*yscale), round((self.x+self.width-self.width*(self.rotation/180))*xscale), round((self.y+self.height)*yscale), self.color)
-    #         elif self.rotation == 180:
-    #             pygame.gfxdraw.filled_trigon(window, round(self.x*xscale), round(self.y*yscale), round((self.x+self.width/2)*xscale), round((self.y+self.height)*yscale), round((self.x+self.width)*xscale), round(self.y*yscale), self.color)
-    #         else:
-    #             pass
-            
-    #     if self.type == 2:
-    #         self.rect = (self.x*xscale, self.y*yscale, self.width*xscale, self.height*yscale)
-    #         pygame.gfxdraw.box(window, self.rect, self.color)
 
     def tick(self):
         pass
