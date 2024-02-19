@@ -2,7 +2,7 @@ import pygame
 import math
 pygame.init()
 
-class button:
+class Button:
     def __init__(self, x, y, width, height, text, onclick=None, image_file=None):
         self.x = x
         self.y = y
@@ -101,7 +101,7 @@ class button:
             self.border_color = (196, 48, 48)
             self.text_color = (255, 64, 64)
 
-class text_box:
+class TextBox:
     def __init__(self, surface, x, y, width, height):
         self.surface = surface
         self.x = x
@@ -149,7 +149,7 @@ class text_box:
                         self.disp_text = self.font.render(self.text, True, self.text_color)
         
 
-class menu:
+class Menu:
     def __init__(self, x, y, width, height, columns, rows):
         self.x = x
         self.y = y
@@ -191,7 +191,7 @@ class menu:
         for button in self.buttons:
             button.get_clicked()
     
-class slider:
+class Slider:
     def __init__(self, x, y, width, height, value_range, step_amount, text, slider_pos, onclick=None):
         self.x = x
         self.y = y
