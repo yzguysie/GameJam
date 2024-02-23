@@ -58,7 +58,6 @@ BACKGROUND_COLOR = graphics.Colors.bg_blue
 
 show_hitboxes = False
 
-autoscroll = False
 autoscroll_start_x = round(width/3)
 autoscroll_end_x = round(2*width/3)
 autoscroll_start_y = round(height-height/3*2)
@@ -67,8 +66,8 @@ autoscroll_smoothness = fps/15
 
 xscale = screen_width/width
 yscale = screen_height/height
-xscale = yscale # Needed?
-scale = graphics.Scale(x=xscale, y=yscale, autoscroll_offset_x=0, autoscroll_offset_y=0)
+
+camera = graphics.Camera(yscale, 0, 0)
 
 world_height_limit = -5000
 
@@ -155,10 +154,10 @@ class Player(Object):
                     self.interpolation_offset_y = 0
                 else:
                     self.interpolation_offset_y = self.yspeed*gamespeed * (frames%interpolation_frames)/interpolation_frames
-            self.sprite.x = ((self.x+self.interpolation_offset_x)-self.scale.autoscroll_offset_x)*self.scale.x
-            self.sprite.y = ((self.y+self.interpolation_offset_y)-self.scale.autoscroll_offset_y)*self.scale.y
-            self.sprite.width = self.width*self.scale.x
-            self.sprite.height = self.height*self.scale.y
+            self.sprite.x = ((self.x+self.interpolation_offset_x)-self.camera.x)*self.camera.scale
+            self.sprite.y = ((self.y+self.interpolation_offset_y)-self.camera.y)*self.camera.scale
+            self.sprite.width = self.width*self.camera.scale
+            self.sprite.height = self.height*self.camera.scale
             self.sprite.draw(window)
             return
                 
@@ -426,7 +425,7 @@ class Obstacle(Object):
         self.width = round(self.width)
         self.height = round(self.height)
         
-        self.rect = (self.x*self.scale.x, self.y*self.scale.y, self.width*self.scale.x, self.height*self.scale.y)
+        self.rect = (self.x*self.camera.scale, self.y*self.camera.scale, self.width*self.camera.scale, self.height*self.camera.scale)
         pygame.gfxdraw.box(window, self.rect, self.color)
         pygame.gfxdraw.rectangle(window, self.rect, self.outline_color)
 
@@ -517,7 +516,7 @@ class BumpPad(Portal):
     
 class Level():
     def __init__(self):
-        self.player = Player(scale)
+        self.player = Player(camera)
         
         self.obstacles = []
         self.hazards = []
@@ -541,15 +540,15 @@ class Level():
 
 
                 if int(object_id) == 1:
-                    self.obstacles.append(Obstacle(scale, float(object_data[1]), float(object_data[2]), float(object_data[3]), float(object_data[4]), float(object_data[5])))
+                    self.obstacles.append(Obstacle(camera, float(object_data[1]), float(object_data[2]), float(object_data[3]), float(object_data[4]), float(object_data[5])))
                 elif int(object_id) == 2:
-                    self.hazards.append(Hazard(scale, float(object_data[1]), float(object_data[2]), float(object_data[3]), float(object_data[4]), float(object_data[5])))
+                    self.hazards.append(Hazard(camera, float(object_data[1]), float(object_data[2]), float(object_data[3]), float(object_data[4]), float(object_data[5])))
                 else:
                     portal_type = important_list[object_id]
                     if portal_type != Portal:
-                        new_portal = portal_type(scale, float(object_data[1]), float(object_data[2]), float(object_data[3]), float(object_data[4]), float(object_data[5]))
+                        new_portal = portal_type(camera, float(object_data[1]), float(object_data[2]), float(object_data[3]), float(object_data[4]), float(object_data[5]))
                     else:
-                        new_portal = Portal(scale, float(object_data[1]), float(object_data[2]), float(object_data[3]), float(object_data[4]), int(object_data[0])-2, float(object_data[5]))
+                        new_portal = Portal(camera, float(object_data[1]), float(object_data[2]), float(object_data[3]), float(object_data[4]), int(object_data[0])-2, float(object_data[5]))
                     
                     self.portals.append(new_portal)
 
@@ -604,6 +603,9 @@ def on_slot_clicked(slot):
         load_level(f'slot_{slot}')
         loading_level = False
 
+def save_button_action():
+    set_saving_loading(True, False)
+    
 
 def set_saving_loading(saving, loading):
     global saving_level
@@ -627,7 +629,7 @@ players = []
 
 
 for i in range(player_count):
-    player = Player(scale)
+    player = Player(camera)
 
     players.append(player)
 
@@ -695,7 +697,7 @@ def get_grid_pos(pos, g_width=grid_width, g_height=grid_height):
 
 def get_mouse_pos():
     x, y = pygame.mouse.get_pos()
-    return (x/scale.x)+scale.autoscroll_offset_x, (y/scale.y)+scale.autoscroll_offset_y
+    return (x/camera.scale)+camera.x, (y/camera.scale)+camera.y
 
 def get_objs_touching(objs, pos, amount):
     touching = []
@@ -744,57 +746,57 @@ def make_new_object(id_, pos):
         
         #CLEAN UP - you NEED to put every object in one list bro (ok i did but kinda in a bad way so fix that now)
     if id_ == ObjectType.BLOCK:
-        new_obstacle = Obstacle(scale, x ,y, grid_width, grid_height)
+        new_obstacle = Obstacle(camera, x ,y, grid_width, grid_height)
         if obstacle_sprite:
             new_obstacle.make_sprite(obstacle_default_image)
         obstacles.append(new_obstacle)
 
     if id_ == ObjectType.SPIKE:
-        new_spike = Hazard(scale, x, y, grid_width, grid_height)
+        new_spike = Hazard(camera, x, y, grid_width, grid_height)
         if hazard_sprite:
             new_spike.make_sprite(hazard_default_image)
         hazards.append(new_spike)
 
     if id_ == ObjectType.YELLOW_PORTAL:
-        new_portal = YellowPortal(scale, x, y, grid_width/2, grid_height*2)
+        new_portal = YellowPortal(camera, x, y, grid_width/2, grid_height*2)
         new_portal.make_sprite(yellow_portal_default_image)
         portals.append(new_portal)
 
     if id_ == ObjectType.BLUE_PORTAL:
-        new_portal = BluePortal(scale, x, y, grid_width/2, grid_height*2)
+        new_portal = BluePortal(camera, x, y, grid_width/2, grid_height*2)
         new_portal.make_sprite(portal_default_image)
         portals.append(new_portal)
 
     if id_ == ObjectType.NORMAL_PORTAL:
-        new_portal = NormalPortal(scale, x, y, grid_width/2, grid_height*2)
+        new_portal = NormalPortal(camera, x, y, grid_width/2, grid_height*2)
         new_portal.make_sprite(portal_default_image)
         portals.append(new_portal)
 
     if id_ == ObjectType.MINI_PORTAL:
-        new_portal = MiniPortal(scale, x, y, grid_width/2, grid_height*2)
+        new_portal = MiniPortal(camera, x, y, grid_width/2, grid_height*2)
         new_portal.make_sprite(portal_default_image)
         portals.append(new_portal)
 
     if id_ == ObjectType.SLAB:
         x, y = get_grid_pos(pos, grid_width, grid_height/2)
-        new_obstacle = Obstacle(scale, x ,y, grid_width, grid_height/2)
+        new_obstacle = Obstacle(camera, x ,y, grid_width, grid_height/2)
         if obstacle_sprite:
             new_obstacle.make_sprite(obstacle_default_image)
         obstacles.append(new_obstacle)
 
     if id_ == ObjectType.MINI_BLOCK:
         x, y = get_grid_pos(pos, grid_width/2, grid_height/2)
-        new_obstacle = Obstacle(scale, x ,y, grid_width/2, grid_height/2)
+        new_obstacle = Obstacle(camera, x ,y, grid_width/2, grid_height/2)
         if obstacle_sprite:
             new_obstacle.make_sprite(obstacle_default_image)
         obstacles.append(new_obstacle)
 
     if id_ == ObjectType.JUMP_PAD:
-        new_portal = BumpPad(scale, x, y, grid_width, grid_height/2)
+        new_portal = BumpPad(camera, x, y, grid_width, grid_height/2)
         portals.append(new_portal)
 
     if id_ == ObjectType.END_PORTAL:
-        new_portal = EndLevelPortal(scale, x, y, grid_width/2, grid_height*2, 6)
+        new_portal = EndLevelPortal(camera, x, y, grid_width/2, grid_height*2, 6)
         new_portal.make_sprite(portal_default_image)
         portals.append(new_portal)
         
@@ -869,10 +871,7 @@ class Display:
     def check_window_resize(self):
         self.screen_width = pygame.display.get_surface().get_width()
         self.screen_height = pygame.display.get_surface().get_height()
-        scale.x = self.screen_width/width
-        # real_xscale = self.screen_width/width
-        scale.y = self.screen_height/height
-        scale.x = scale.y # Is this needed?
+        camera.scale = self.screen_height/height
         self.reload_buttons()
         self.reload_all_sprites()
 
@@ -892,7 +891,7 @@ class Display:
 
         global autoscroll_start_x
         global autoscroll_end_x
-        # global real_xscale
+
         autoscroll_start_x = round(width/3*((self.screen_width/self.screen_height)/16*9))
         autoscroll_end_x = round(2*width/3*((self.screen_width/self.screen_height)/16*9))
         
@@ -1119,7 +1118,7 @@ class Game:
                     make_new_object(selected, mouse_pos)
 
     def play(self):
-        global scale
+        global camera
         global frames, last_time, load_new_level
 
         while self.playing:
@@ -1134,8 +1133,8 @@ class Game:
             
             self.display.window.fill(BACKGROUND_COLOR)
             self.display.background.draw(self.display.window)
-            self.display.ground.x = -scale.autoscroll_offset_x*scale.x
-            self.display.ground.y = (self.display.screen_height-scale.autoscroll_offset_y*scale.y)
+            self.display.ground.x = -camera.x*camera.scale
+            self.display.ground.y = (self.display.screen_height-camera.y*camera.scale)
             
 
             while self.display.ground.x > 0:
@@ -1143,7 +1142,7 @@ class Game:
             while self.display.ground.x+self.display.ground.image.get_width() < self.display.screen_width:
                 self.display.ground.x += self.display.ground.image.get_width()/2
             
-            self.display.ceiling.x = -scale.autoscroll_offset_x*scale.x
+            self.display.ceiling.x = -camera.x*camera.scale
 
             while self.display.ceiling.x > 0:
                 self.display.ceiling.x -= self.display.ceiling.image.get_width()/2
@@ -1151,7 +1150,7 @@ class Game:
                 self.display.ceiling.x += self.display.ceiling.image.get_width()/2
 
 
-            self.display.ceiling.y = (world_height_limit*scale.y-scale.autoscroll_offset_y*scale.y-self.display.screen_height)
+            self.display.ceiling.y = (world_height_limit*camera.scale-camera.y*camera.scale-self.display.screen_height)
             
             self.display.ground.draw(self.display.window)
             self.display.ceiling.draw(self.display.window)
@@ -1184,21 +1183,21 @@ class Game:
 
             # Clean up - Put this into a func
                                 
-            pivot_x = players[0].x+players[0].width/2+players[0].interpolation_offset_x-scale.autoscroll_offset_x
+            pivot_x = players[0].x+players[0].width/2+players[0].interpolation_offset_x-camera.x
 
-            pivot_y = players[0].y+players[0].height/2+players[0].interpolation_offset_y-scale.autoscroll_offset_y
+            pivot_y = players[0].y+players[0].height/2+players[0].interpolation_offset_y-camera.y
 
             if pivot_x > autoscroll_end_x:
-                scale.autoscroll_offset_x += (pivot_x-autoscroll_end_x)/autoscroll_smoothness
+                camera.x += (pivot_x-autoscroll_end_x)/autoscroll_smoothness
 
             if pivot_x < autoscroll_start_x:
-                scale.autoscroll_offset_x += (pivot_x-autoscroll_start_x)/autoscroll_smoothness
+                camera.x += (pivot_x-autoscroll_start_x)/autoscroll_smoothness
 
             if pivot_y > autoscroll_end_y:
-                scale.autoscroll_offset_y += (pivot_y-autoscroll_end_y)/autoscroll_smoothness
+                camera.y += (pivot_y-autoscroll_end_y)/autoscroll_smoothness
 
             if pivot_y < autoscroll_start_y:
-                scale.autoscroll_offset_y += (pivot_y-autoscroll_start_y)/autoscroll_smoothness
+                camera.y += (pivot_y-autoscroll_start_y)/autoscroll_smoothness
 
             for menu in self.menus:
                 menu.tick()

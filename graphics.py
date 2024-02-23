@@ -43,17 +43,21 @@ class Sprite:
         self.centered = centered
 
 
-@dataclass
-class Scale:
-    x: float
-    y: float
-    autoscroll_offset_x: float
-    autoscroll_offset_y: float
+class Camera:
+    def __init__(self, scale, x, y):
+        self.scale = scale
+        self.x = x
+        self.y = y
+
+    def get_camera_pos(self, x, y):
+        return (x-self.x)*self.scale, (y-self.y)*self.scale
+
+    
 
 
 class Drawable:
-    def __init__(self, scale: Scale, x: int, y: int, width: int, height: int, rotation: float) -> None:
-        self.scale = scale
+    def __init__(self, camera: Camera, x: int, y: int, width: int, height: int, rotation: float) -> None:
+        self.camera = camera
         self.x = x
         self.y = y
         self.width = width
@@ -62,15 +66,14 @@ class Drawable:
         self.sprite = None
 
     def make_sprite(self, image, centered=False):
-        img = pygame.transform.smoothscale(image, (round(self.width*self.scale.x), round(self.height*self.scale.y)))
-        self.sprite = Sprite(img, self.x*self.scale.x, self.y*self.scale.y, self.rotation)
+        img = pygame.transform.smoothscale(image, (round(self.width*self.camera.scale), round(self.height*self.camera.scale)))
+        self.sprite = Sprite(img, self.x*self.camera.scale, self.y*self.camera.scale, self.rotation)
         self.sprite.set_centered(centered)
 
     def update_sprite(self):
-        self.sprite.x = (self.x-self.scale.autoscroll_offset_x)*self.scale.x
-        self.sprite.y = (self.y-self.scale.autoscroll_offset_y)*self.scale.y
-        self.sprite.width = self.width*self.scale.x
-        self.sprite.height = self.height*self.scale.y
+        self.sprite.x, self.sprite.y = self.camera.get_camera_pos(self.x, self.y)
+        self.sprite.width = self.width*self.camera.scale
+        self.sprite.height = self.height*self.camera.scale
         self.sprite.rotation = self.rotation
 
     def draw(self, window):
