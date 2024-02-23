@@ -102,8 +102,7 @@ class Button:
             self.text_color = (255, 64, 64)
 
 class TextBox:
-    def __init__(self, surface, x, y, width, height):
-        self.surface = surface
+    def __init__(self, x, y, width, height):
         self.x = x
         self.y = y
         self.width = width
@@ -120,15 +119,14 @@ class TextBox:
         self.font = pygame.font.SysFont('Cascadia Code', self.text_size)
         self.disp_text = self.font.render(self.text, True, self.text_color)
 
-    def draw(self):
+    def draw(self, surface):
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
-        pygame.draw.rect(self.surface, self.color, self.rect)
-        pygame.draw.rect(self.surface, self.border_color, self.rect, round(min(self.width, self.height)/25))
-        self.surface.blit(self.disp_text, (self.rect[0], self.rect[1]))
+        pygame.draw.rect(surface, self.color, self.rect)
+        pygame.draw.rect(surface, self.border_color, self.rect, round(min(self.width, self.height)/25))
+        surface.blit(self.disp_text, (self.rect[0], self.rect[1]))
         
         
     def tick(self):
-        self.draw()
         for event in self.events:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if self.rect.collidepoint(pygame.mouse.get_pos()):

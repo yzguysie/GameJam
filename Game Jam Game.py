@@ -597,7 +597,7 @@ def on_slot_clicked(slot):
     global loading_level
     
     if saving_level:
-        save_level_good(f'slot_{slot}')
+        save_level_good(get_saved_level_name())
         saving_level = False
     elif loading_level:
         load_level(f'slot_{slot}')
@@ -605,6 +605,8 @@ def on_slot_clicked(slot):
 
 def save_button_action():
     set_saving_loading(True, False)
+    saving_box = ui.TextBox(width/2, height/2, width/20, height/20)
+    game.display.text_boxes.append(saving_box)
     
 
 def set_saving_loading(saving, loading):
@@ -687,7 +689,7 @@ def mouse_over_anything():
 
 # sliders = []
 
-# text_boxes = []
+
 
 
 def get_grid_pos(pos, g_width=grid_width, g_height=grid_height):
@@ -852,6 +854,7 @@ class Display:
         self.menus = []
         self.buttons = []
         self.menu_buttons = []
+        self.text_boxes = []
         self.edit_mode = False
         self.reload_buttons()
         self.background = graphics.Sprite(pygame.transform.smoothscale(background_default_image, (self.screen_width, self.screen_height)), 0, 0, 0)
@@ -916,7 +919,7 @@ class Display:
             self.menu_buttons.append(self.editor_button)
             self.menu_buttons.append(self.quit_button)
         if True:
-            self.save_button = ui.Button(self.screen_width-button_width*2, 0, button_width, button_height, "save", partial(set_saving_loading, True, False))
+            self.save_button = ui.Button(self.screen_width-button_width*2, 0, button_width, button_height, "save", save_button_action)
             self.load_button = ui.Button(self.screen_width-button_width, 0, button_width, button_height, "load", partial(set_saving_loading, False, True))
             self.reset_button = ui.Button(self.screen_width-button_width*2, button_height, button_width, button_height, "reset", partial(set_level, Level()))
             self.delete_button = ui.Button(0, (button_height+5), button_width, button_height, "delete", partial(set_selected_object, ObjectType.DELETE))
@@ -1057,7 +1060,8 @@ class Game:
             
 
                 elif event.key == pygame.K_RETURN:
-                    save_all_levels(num_levels)
+                    pass
+                    #save_all_levels(num_levels)
 
                 if self.display.is_edit_mode():
 
@@ -1203,11 +1207,12 @@ class Game:
                 menu.tick()
                 menu.draw(self.display.window)
 
-            # for box in text_boxes:
-            #     box.events = events
-            #     box.tick()
+            for box in self.display.text_boxes:
+                box.events = events
+                box.tick()
+                box.draw(self.display.window)
                 
-            for button in game.display.buttons:
+            for button in self.display.buttons:
                 button.get_clicked()
                 button.draw(self.display.window)
             
