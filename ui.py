@@ -127,6 +127,7 @@ class TextBox:
         
         
     def tick(self):
+        done = False
         for event in self.events:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if self.rect.collidepoint(pygame.mouse.get_pos()):
@@ -137,15 +138,17 @@ class TextBox:
             if self.active:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RETURN:
+                        self.ret_text = self.text
                         self.text = ''
                         self.disp_text = self.font.render(self.text, True, self.text_color)
+                        done = True
                     elif event.key == pygame.K_BACKSPACE:
                         self.text = self.text[:-1]
                         self.disp_text = self.font.render(self.text, True, self.text_color)
                     else:
                         self.text += event.unicode
                         self.disp_text = self.font.render(self.text, True, self.text_color)
-        
+        return done
 
 class Menu:
     def __init__(self, x, y, width, height, columns, rows):
@@ -156,14 +159,15 @@ class Menu:
         self.rows = rows
         self.columns = columns
         self.buttons = []
-        self.color = (128, 128, 128)
+        self.color = (64, 64, 64)
+        self.border_color = (128, 128, 128)
         self.enabled = True
         
     def add_button(self, button):
         if len(self.buttons) > self.columns*self.rows:
             return
-        button.width = self.width/self.columns *.9
-        button.height = self.height/self.rows *.9
+        button.width = self.width/self.columns *.8
+        button.height = self.height/self.rows *.8
         button_column = len(self.buttons)%self.columns
         button_row = len(self.buttons)//self.columns
         button.x = self.x + self.width*(button_column/self.columns) + button.width/10
@@ -180,6 +184,8 @@ class Menu:
     def draw(self, surface):
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
         pygame.draw.rect(surface, self.color, self.rect)
+        pygame.draw.rect(surface, self.border_color, self.rect, round(min(self.width, self.height)/25))
+
         for button in self.buttons:
             button.draw(surface)
 
