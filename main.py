@@ -615,6 +615,12 @@ def rename_level(name):
 def name_button_action():
     naming_box = ui.TextBox(game.display.screen_width/2, game.display.screen_height/4, game.display.screen_width/10, game.display.screen_height/20, rename_level)
     game.display.text_boxes.append(naming_box)
+
+def save_button_action():
+    if game.level.name != "unnamed":
+        game.level.save()
+        return
+    set_saving_loading(True, False)   
     
 
 def set_saving_loading(saving, loading):
@@ -918,7 +924,7 @@ class Display:
         if True:
             self.fps_slider = ui.Slider(button_width*2, 0, button_width*2, button_height*2, (10, 240), 5, "fps", 60)
             self.name_button = ui.Button(self.screen_width-button_width*3, 0, button_width, button_height, "name", name_button_action)
-            self.save_button = ui.Button(self.screen_width-button_width*2, 0, button_width, button_height, "save", game.level.save)
+            self.save_button = ui.Button(self.screen_width-button_width*2, 0, button_width, button_height, "save", save_button_action)
             self.load_button = ui.Button(self.screen_width-button_width, 0, button_width, button_height, "load", partial(set_saving_loading, False, True))
             self.reset_button = ui.Button(self.screen_width-button_width*2, button_height, button_width, button_height, "reset", partial(game.set_level, Level()))
             self.delete_button = ui.Button(0, self.screen_height-button_height*4, button_width, button_height, "delete", partial(set_selected_object, ObjectType.DELETE))

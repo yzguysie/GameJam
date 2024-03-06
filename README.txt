@@ -1,7 +1,7 @@
 WARNING: This project is a work in progress, and contains many bugs and unfinished features
 
 
---Instructions--:
+-- Instructions --
 
 In order to run the game, run the "main.py" file
 
