@@ -324,7 +324,6 @@ class Player(Object):
         self.sprite.rotation += (self.sprite.target_rotation-self.sprite.rotation)/max(1,smoothness) 
    
     def tick(self):
-        #global obstacles
         self.apply_gravity()
         if self.touching_surface():
             self.apply_friction(flat_friction, multiplicative_friction)
@@ -411,22 +410,11 @@ class Obstacle(Object):
         Object.__init__(self, scale, 1, x, y, width, height, rotation)
         self.color = graphics.Colors.light_gray
         self.outline_color = graphics.Colors.gray
-        #self.rotation = 0
-        #self.costume = 0
+
 
     def draw(self, window):
-            
         self.update_sprite()
         self.sprite.draw(window)
-
-        # self.x = round(self.x)
-        # self.y = round(self.y)
-        # self.width = round(self.width)
-        # self.height = round(self.height)
-        
-        # self.rect = (self.x*self.camera.scale, self.y*self.camera.scale, self.width*self.camera.scale, self.height*self.camera.scale)
-        # pygame.gfxdraw.box(window, self.rect, self.color)
-        # pygame.gfxdraw.rectangle(window, self.rect, self.outline_color)
 
     def tick(self):
         pass
@@ -436,7 +424,6 @@ class Hazard(Object):
         Object.__init__(self, scale, 2, x, y, width, height, rotation)
         self.color = graphics.Colors.red
         self.type = 1
-        #self.rotation = 0
 
 
     def tick(self):
@@ -447,7 +434,6 @@ class Portal(Object):
     def __init__(self, scale, id, x, y, width, height, type_, rotation=0):
         Object.__init__(self, scale, id, x, y, width, height, rotation)
         self.contacting = False
-        #self.rotation = 0
 
     def apply(self, player):
         pass
@@ -882,16 +868,7 @@ class Display:
     def reload_buttons(self):
         global players
         
-        global save_button
-        global load_button
-        global reset_button
 
-        global recover_button
-
-        global play_button
-        global options_button
-        global quit_button
-        global editor_button
 
         global autoscroll_start_x
         global autoscroll_end_x
