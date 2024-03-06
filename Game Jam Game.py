@@ -171,7 +171,7 @@ class Player(Object):
                 #self.y = world_height_limit
                 return True
 
-        for obstacle in obstacles:
+        for obstacle in game.level.obstacles:
             if self.is_on(obstacle):
                 return True
 
@@ -188,7 +188,7 @@ class Player(Object):
             if self.y <= world_height_limit:
                 return True
 
-        for obstacle in obstacles:
+        for obstacle in game.level.obstacles:
             if self.is_touching_no_generosity(obstacle):
                 return True
 
@@ -197,7 +197,7 @@ class Player(Object):
     def do_collision(self):
         # Clean this up - fix collision
         hitting = False
-        for obstacle in obstacles:
+        for obstacle in game.level.obstacles:
             player_top = self.y
             player_bottom = self.y+self.height
             player_right = self.x+self.width
@@ -266,7 +266,7 @@ class Player(Object):
                             self.yspeed = 0
                             self.y = obstacle.y-self.height
 
-        for hazard in hazards:
+        for hazard in game.level.hazards:
             if self.is_touching(hazard):
                 self.die()
         return hitting
@@ -324,7 +324,7 @@ class Player(Object):
         self.sprite.rotation += (self.sprite.target_rotation-self.sprite.rotation)/max(1,smoothness) 
    
     def tick(self):
-        global obstacles
+        #global obstacles
         self.apply_gravity()
         if self.touching_surface():
             self.apply_friction(flat_friction, multiplicative_friction)
@@ -521,6 +521,7 @@ class Level:
         self.hazards = []
         self.portals = []
         self.objects_editing = []
+        self.placeable = []
 
 
     def load(self, data):
@@ -574,27 +575,11 @@ class Level:
         for p in self.portals:
             yield p
 
-def set_level(level):
-    global player
-    global obstacles
-    global hazards
-    global portals
-    try:
-        player = level.player
-
-        obstacles = level.obstacles
-
-        hazards = level.hazards
-
-        portals = level.portals
-
-    except:
-        print("Level corrupted")
 
 def save_level():
 
     object_data = []
-    for object in all_objects():
+    for object in game.level.all_objects():
         object_data.append(repr(object))
     return "/".join(object_data)
 
@@ -675,17 +660,17 @@ for player in players:
     player.make_sprite(player_default_image)
 
 
-obstacles = []
-hazards = []
-portals = []
+# obstacles = []
+# hazards = []
+# portals = []
 
-def all_objects():
-    for o in obstacles:
-        yield o
-    for h in hazards:
-        yield h
-    for p in portals:
-        yield p
+# def all_objects():
+#     for o in obstacles:
+#         yield o
+#     for h in hazards:
+#         yield h
+#     for p in portals:
+#         yield p
 
 objects_editing = []
 
@@ -747,14 +732,14 @@ def get_objs_touching(objs, pos, amount):
 
 
 def delete_touching(pos):
-    obj = get_objs_touching(all_objects(), pos, 1)
+    obj = get_objs_touching(game.level.all_objects(), pos, 1)
     if obj:
         if isinstance(obj, Obstacle):
-            obstacles.remove(obj)
+            game.level.obstacles.remove(obj)
         if isinstance(obj, Portal):
-            portals.remove(obj)
+            game.level.portals.remove(obj)
         if isinstance(obj, Hazard):
-            hazards.remove(obj)
+            game.level.hazards.remove(obj)
 
     
 def make_new_object(id_, pos):
@@ -766,7 +751,7 @@ def make_new_object(id_, pos):
 
     # Clean this up - repeated code
     if id_ == ObjectType.SELECT:
-        obj = get_objs_touching(all_objects(), pos, 1)
+        obj = get_objs_touching(game.level.all_objects(), pos, 1)
         if obj:
             if obj in objects_editing:
                 objects_editing.remove(obj)
@@ -780,38 +765,32 @@ def make_new_object(id_, pos):
         new_obstacle = Obstacle(camera, x ,y, grid_width, grid_height)
         if obstacle_sprite:
             new_obstacle.make_sprite(obstacle_default_image)
-        obstacles.append(new_obstacle)
         game.level.obstacles.append(new_obstacle)
 
     if id_ == ObjectType.SPIKE:
         new_spike = Hazard(camera, x, y, grid_width, grid_height)
         if hazard_sprite:
             new_spike.make_sprite(hazard_default_image)
-        hazards.append(new_spike)
         game.level.hazards.append(new_spike)
 
     if id_ == ObjectType.YELLOW_PORTAL:
         new_portal = YellowPortal(camera, x, y, grid_width/2, grid_height*2)
         new_portal.make_sprite(yellow_portal_default_image)
-        portals.append(new_portal)
         game.level.portals.append(new_portal)
 
     if id_ == ObjectType.BLUE_PORTAL:
         new_portal = BluePortal(camera, x, y, grid_width/2, grid_height*2)
         new_portal.make_sprite(portal_default_image)
-        portals.append(new_portal)
         game.level.portals.append(new_portal)
 
     if id_ == ObjectType.NORMAL_PORTAL:
         new_portal = NormalPortal(camera, x, y, grid_width/2, grid_height*2)
         new_portal.make_sprite(portal_default_image)
-        portals.append(new_portal)
         game.level.portals.append(new_portal)
 
     if id_ == ObjectType.MINI_PORTAL:
         new_portal = MiniPortal(camera, x, y, grid_width/2, grid_height*2)
         new_portal.make_sprite(portal_default_image)
-        portals.append(new_portal)
         game.level.portals.append(new_portal)
 
     if id_ == ObjectType.SLAB:
@@ -819,7 +798,6 @@ def make_new_object(id_, pos):
         new_obstacle = Obstacle(camera, x ,y, grid_width, grid_height/2)
         if obstacle_sprite:
             new_obstacle.make_sprite(obstacle_default_image)
-        obstacles.append(new_obstacle)
         game.level.obstacles.append(new_obstacle)
 
     if id_ == ObjectType.MINI_BLOCK:
@@ -827,18 +805,15 @@ def make_new_object(id_, pos):
         new_obstacle = Obstacle(camera, x ,y, grid_width/2, grid_height/2)
         if obstacle_sprite:
             new_obstacle.make_sprite(obstacle_default_image)
-        obstacles.append(new_obstacle)
         game.level.obstacles.append(new_obstacle)
 
     if id_ == ObjectType.JUMP_PAD:
         new_portal = BumpPad(camera, x, y, grid_width, grid_height/2)
-        portals.append(new_portal)
         game.level.portals.append(new_portal)
 
     if id_ == ObjectType.END_PORTAL:
         new_portal = EndLevelPortal(camera, x, y, grid_width/2, grid_height*2, 6)
         new_portal.make_sprite(portal_default_image)
-        portals.append(new_portal)
         game.level.portals.append(new_portal)
         
 
@@ -855,13 +830,12 @@ def load_level(level_name):
     saved_level_data = config.get((level_name), ('level'))
     level = Level()
     level.load(saved_level_data)
-    set_level(level)
-    # game.set_level(level)
+    game.set_level(level)
 
 
     important_list2 = [obstacle_default_image, obstacle_default_image, hazard_default_image, portal_default_image, yellow_portal_default_image, portal_default_image, portal_default_image, portal_default_image, portal_default_image, portal_default_image, portal_default_image]
 
-    for object in all_objects():
+    for object in level.all_objects():
         object.make_sprite(important_list2[object.id])
         
     for player in players:
@@ -884,8 +858,7 @@ def save_all_levels(num):
         load_level(f'slot_{i}')
         save_level_good(f'slot_{i}')
 
-load_level(f'slot_{level_num}')
-load_new_level = False
+
 
 
 class Display:
@@ -967,7 +940,7 @@ class Display:
             self.name_button = ui.Button(self.screen_width-button_width*3, 0, button_width, button_height, "name")
             self.save_button = ui.Button(self.screen_width-button_width*2, 0, button_width, button_height, "save", partial(set_saving_loading, True, False))
             self.load_button = ui.Button(self.screen_width-button_width, 0, button_width, button_height, "load", partial(set_saving_loading, False, True))
-            self.reset_button = ui.Button(self.screen_width-button_width*2, button_height, button_width, button_height, "reset", partial(set_level, Level()))
+            #self.reset_button = ui.Button(self.screen_width-button_width*2, button_height, button_width, button_height, "reset", partial(set_level, Level()))
             self.delete_button = ui.Button(0, (button_height+5), button_width, button_height, "delete", partial(set_selected_object, ObjectType.DELETE))
             self.block_button = ui.Button((button_width+5)*0, (button_height+5)*2, button_width, button_height, "block", partial(set_selected_object, ObjectType.BLOCK), obstacle_default_image)
             self.slab_button = ui.Button((button_width+5)*1, (button_height+5)*2, button_width, button_height, "slab", partial(set_selected_object, ObjectType.SLAB), obstacle_default_image)
@@ -999,7 +972,7 @@ class Display:
 
                 self.buttons.append(self.save_button)
                 self.buttons.append(self.load_button)
-                self.buttons.append(self.reset_button)
+                #self.buttons.append(self.reset_button)
                 self.buttons.append(self.recover_button)
                 self.buttons.append(self.delete_button)
                 self.buttons.append(self.select_button)
@@ -1034,7 +1007,7 @@ class Display:
 
         important_list2 = [obstacle_default_image, obstacle_default_image, hazard_default_image, portal_default_image, yellow_portal_default_image, portal_default_image, portal_default_image, portal_default_image, portal_default_image, portal_default_image, portal_default_image]
 
-        for object in all_objects():
+        for object in game.level.all_objects():
             object.make_sprite(important_list2[object.id])
         
 
@@ -1229,19 +1202,19 @@ class Game:
             self.handle_events(self.events)
             if tickrate < fps:
                 if frames%(int(fps/tickrate))==0:
-                    for object in all_objects():
+                    for object in self.level.all_objects():
                         object.tick()
                     for player in players:  
                         player.tick()
             else:
                 for i in range(int(tickrate/fps)):
-                    for object in all_objects():
+                    for object in self.level.all_objects():
                         object.tick()
                     for player in players:  
                         player.tick()
 
 
-            for object in all_objects():
+            for object in self.level.all_objects():
                 object.draw(self.display.window)
             for player in players:  
                 player.draw(self.display.window)
@@ -1306,6 +1279,8 @@ class Game:
         self.level = level
 
 game = Game()
+load_level(f'slot_{level_num}')
+load_new_level = False
 # game.load_default()
 game.play()
 
