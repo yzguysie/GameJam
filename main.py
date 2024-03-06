@@ -169,7 +169,7 @@ class Player(Object):
         else:
             if self.y <= world_height_limit:
                 #self.y = world_height_limit
-                return True
+                return False
 
         for obstacle in game.level.obstacles:
             if self.is_on(obstacle):
@@ -186,7 +186,7 @@ class Player(Object):
                 return True
         else:
             if self.y <= world_height_limit:
-                return True
+                return False
 
         for obstacle in game.level.obstacles:
             if self.is_touching_no_generosity(obstacle):
@@ -333,9 +333,8 @@ class Player(Object):
         self.y += self.yspeed*gamespeed
         self.do_collision()
            
-        if self.y < world_height_limit:
-            self.y = world_height_limit
-            self.yspeed = 0
+        if self.y <= world_height_limit:
+            self.die()
 
         if self.y+self.height > height:
             self.y = height-self.height
@@ -381,11 +380,13 @@ class Player(Object):
 
 
     def jump(self):
-        jump_sound.play()
+        
         if self.mini:
             self.yspeed = -self.mini_jump_height*(abs(self.gravity)/self.gravity)
+            mini_jump_sound.play()
         else:
             self.yspeed = -self.jump_height*(abs(self.gravity)/self.gravity)
+            jump_sound.play()
            
         if self.yspeed < -player.max_speed_y:
             self.yspeed = -player.max_speed_y
@@ -647,7 +648,8 @@ yellow_portal_default_image = pygame.image.load("resources/images/yellow_portal.
 
 
 game_default_music = pygame.mixer.Sound("resources/sounds/ez.mp3")
-jump_sound = pygame.mixer.Sound("resources/sounds/smb_jump1.wav")
+jump_sound = pygame.mixer.Sound("resources/sounds/jump.wav")
+mini_jump_sound = pygame.mixer.Sound("resources/sounds/mini_jump.wav")
 
 for player in players:
     player.make_sprite(player_default_image)
@@ -806,6 +808,7 @@ def make_new_object(id_, pos):
 
     if id_ == ObjectType.JUMP_PAD:
         new_portal = BumpPad(camera, x, y, grid_width, grid_height/2)
+        new_portal.make_sprite(portal_default_image)
         game.level.portals.append(new_portal)
 
     if id_ == ObjectType.END_PORTAL:
