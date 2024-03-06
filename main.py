@@ -499,11 +499,10 @@ class EndLevelPortal(Portal):
     def apply(self, player):
             global level_num
             global load_new_level
-            global portals
-            if self in portals:
+            if self in game.level.portals:
                 level_num += 1
                 load_new_level = True
-                portals.remove(self)
+                game.level.portals.remove(self)
 
 class BumpPad(Portal):
     def __init__(self, scale, x, y, width, height, rotation=0):
@@ -607,13 +606,15 @@ def on_slot_clicked(slot):
         save_level_good(f'slot_{slot}')
         saving_level = False
     elif loading_level:
-        load_level(f'slot_{slot}')
+        game.load_level(f'slot_{slot}')
         loading_level = False
 
-def save_button_action():
-    set_saving_loading(True, False)
-    saving_box = ui.TextBox(width/2, height/2, width/20, height/20)
-    game.display.text_boxes.append(saving_box)
+def rename_level(name):
+    game.level.name = name
+
+def name_button_action():
+    naming_box = ui.TextBox(game.display.screen_width/2, game.display.screen_height/4, game.display.screen_width/10, game.display.screen_height/20, rename_level)
+    game.display.text_boxes.append(naming_box)
     
 
 def set_saving_loading(saving, loading):
@@ -689,6 +690,10 @@ def mouse_over_anything():
         for button in menu.buttons:
             if button.mouse_over():
                 return True
+            
+    for box in game.display.text_boxes:
+        if box.mouse_over():
+            return True
             
     for slider in game.display.sliders:
         if slider.mouse_over():
@@ -818,31 +823,7 @@ def make_new_object(id_, pos):
         
 
 
-num_levels = 16
-def load_level(level_name):
-    # Clean this up - idk its just bad
-    if level_num > num_levels:
-        #return
-        print("Trying to load level not declared")
-    #try:
-    file_name = f'resources/levels/{level_name}.ini'
-    config.read(file_name)
-    saved_level_data = config.get((level_name), ('level'))
-    level = Level()
-    level.load(saved_level_data)
-    game.set_level(level)
 
-
-    important_list2 = [obstacle_default_image, obstacle_default_image, hazard_default_image, portal_default_image, yellow_portal_default_image, portal_default_image, portal_default_image, portal_default_image, portal_default_image, portal_default_image, portal_default_image]
-
-    for object in level.all_objects():
-        object.make_sprite(important_list2[object.id])
-        
-    for player in players:
-        player.die()
-
-    #except:
-    #    print(f"Failed to load level {level_name}")
 
 def save_level_good(level_name):
     config = ConfigParser()
@@ -855,7 +836,7 @@ def save_level_good(level_name):
 
 def save_all_levels(num):
     for i in range(1, num+1):
-        load_level(f'slot_{i}')
+        game.load_level(f'slot_{i}')
         save_level_good(f'slot_{i}')
 
 
@@ -871,7 +852,6 @@ class Display:
         self.sliders = []
         self.text_boxes = []
         self.edit_mode = False
-        self.reload_buttons()
         self.background = graphics.Sprite(pygame.transform.smoothscale(background_default_image, (self.screen_width, self.screen_height)), 0, 0, 0)
         self.menu_background = graphics.Sprite(pygame.transform.smoothscale(menu_background_default_image, (self.screen_width, self.screen_height)), 0, 0, 0)
         self.ground = graphics.Sprite(pygame.transform.scale(ground_default_image, (self.screen_width*2, self.screen_width/2)), 0, 0, 0)
@@ -937,11 +917,11 @@ class Display:
             self.menu_buttons.append(self.quit_button)
         if True:
             self.fps_slider = ui.Slider(button_width*2, 0, button_width*2, button_height*2, (10, 240), 5, "fps", 60)
-            self.name_button = ui.Button(self.screen_width-button_width*3, 0, button_width, button_height, "name")
-            self.save_button = ui.Button(self.screen_width-button_width*2, 0, button_width, button_height, "save", partial(set_saving_loading, True, False))
+            self.name_button = ui.Button(self.screen_width-button_width*3, 0, button_width, button_height, "name", name_button_action)
+            self.save_button = ui.Button(self.screen_width-button_width*2, 0, button_width, button_height, "save", game.level.save)
             self.load_button = ui.Button(self.screen_width-button_width, 0, button_width, button_height, "load", partial(set_saving_loading, False, True))
-            #self.reset_button = ui.Button(self.screen_width-button_width*2, button_height, button_width, button_height, "reset", partial(set_level, Level()))
-            self.delete_button = ui.Button(0, (button_height+5), button_width, button_height, "delete", partial(set_selected_object, ObjectType.DELETE))
+            self.reset_button = ui.Button(self.screen_width-button_width*2, button_height, button_width, button_height, "reset", partial(game.set_level, Level()))
+            self.delete_button = ui.Button(0, self.screen_height-button_height*4, button_width, button_height, "delete", partial(set_selected_object, ObjectType.DELETE))
             self.block_button = ui.Button((button_width+5)*0, (button_height+5)*2, button_width, button_height, "block", partial(set_selected_object, ObjectType.BLOCK), obstacle_default_image)
             self.slab_button = ui.Button((button_width+5)*1, (button_height+5)*2, button_width, button_height, "slab", partial(set_selected_object, ObjectType.SLAB), obstacle_default_image)
             self.mini_block_button = ui.Button((button_width+5)*2, (button_height+5)*2, button_width, button_height, "mini block", partial(set_selected_object, ObjectType.MINI_BLOCK), obstacle_default_image)
@@ -952,7 +932,7 @@ class Display:
             self.normal_portal_button = ui.Button((button_width+5)*1, (button_height+5)*4, button_width, button_height, "Normal portal", partial(set_selected_object, ObjectType.NORMAL_PORTAL), portal_default_image)
             self.end_portal_button = ui.Button((button_width+5)*2, (button_height+5)*4, button_width, button_height, "End portal", partial(set_selected_object, ObjectType.END_PORTAL), portal_default_image)
             self.jump_pad_button = ui.Button((button_width+5)*3, (button_height+5)*4, button_width, button_height, "Jump pad", partial(set_selected_object, ObjectType.JUMP_PAD), portal_default_image)
-            self.select_button = ui.Button((button_width+5)*4, (button_height+5)*4, button_width, button_height, "select", partial(set_selected_object, ObjectType.SELECT))
+            self.select_button = ui.Button(0, self.screen_height-button_height*5, button_width, button_height, "select", partial(set_selected_object, ObjectType.SELECT))
             self.object_menu = ui.Menu(button_width, self.screen_height-button_height*5, self.screen_width/2-button_width*2, button_height*5, 15, 3)
             slots = 16
 
@@ -966,13 +946,14 @@ class Display:
                 if self.edit_mode:
                     self.buttons.append(new_button)
 
-            self.recover_button = ui.Button(self.screen_width-button_width, button_height, button_width, button_height, "Recover", partial(load_level, 'autosave'))
+            self.recover_button = ui.Button(self.screen_width-button_width, button_height, button_width, button_height, "Recover", partial(game.load_level, 'autosave'))
 
             if self.edit_mode:
 
                 self.buttons.append(self.save_button)
                 self.buttons.append(self.load_button)
-                #self.buttons.append(self.reset_button)
+                self.buttons.append(self.name_button)
+                self.buttons.append(self.reset_button)
                 self.buttons.append(self.recover_button)
                 self.buttons.append(self.delete_button)
                 self.buttons.append(self.select_button)
@@ -1158,7 +1139,7 @@ class Game:
     def play(self):
         global camera
         global frames, last_time, load_new_level
-        global fps
+        global fps, tickrate, gamespeed
 
         while self.playing:
                 
@@ -1195,7 +1176,7 @@ class Game:
             self.display.ceiling.draw(self.display.window)
 
             if load_new_level:
-                load_level(f'slot_{level_num}')
+                game.load_level(f'slot_{level_num}')
                 load_new_level = False
         
             self.events = pygame.event.get()
@@ -1256,6 +1237,8 @@ class Game:
                 slider.tick(self.events)
                 if slider == self.display.fps_slider:
                     fps = slider.get_value()
+                    tickrate = slider.get_value()
+                    gamespeed = 60/tickrate
                 slider.draw(self.display.window)
 
             dialogue = dialogue_font.render("FPS: " + str(fps_), True, graphics.Colors.white)
@@ -1274,12 +1257,32 @@ class Game:
             frames += 1
             # delta_time = (time.time()-last_delta)
             # last_delta = time.time()
+    def load_level(self, level_name):
+        #try:
+            file_name = f'resources/levels/{level_name}.ini'
+            config.read(file_name)
+            saved_level_data = config.get((level_name), ('level'))
+            level = Level()
+            level.load(saved_level_data)
+            self.level = level
 
+
+            important_list2 = [obstacle_default_image, obstacle_default_image, hazard_default_image, portal_default_image, yellow_portal_default_image, portal_default_image, portal_default_image, portal_default_image, portal_default_image, portal_default_image, portal_default_image]
+
+            for object in level.all_objects():
+                object.make_sprite(important_list2[object.id])
+                
+            for player in players:
+                player.die()
+
+        #except:
+        #    print(f"Failed to load level {level_name}")
     def set_level(self, level):
         self.level = level
 
 game = Game()
-load_level(f'slot_{level_num}')
+game.load_level(f'slot_{level_num}')
+game.display.reload_buttons()
 load_new_level = False
 # game.load_default()
 game.play()

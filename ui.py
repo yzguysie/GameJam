@@ -84,6 +84,7 @@ class Button:
 
 
     def mouse_over(self):
+        # Consider self.rect.collidepoint(pygame.mouse.get_pos())
         x, y = pygame.mouse.get_pos()
         if x >= self.x and x <= self.x+self.width and self.enabled:
             return y >= self.y and y <= self.y+self.height
@@ -102,7 +103,7 @@ class Button:
             self.text_color = (255, 64, 64)
 
 class TextBox:
-    def __init__(self, x, y, width, height):
+    def __init__(self, x, y, width, height, onclick = False):
         self.x = x
         self.y = y
         self.width = width
@@ -118,6 +119,7 @@ class TextBox:
         self.text_size = 25
         self.font = pygame.font.SysFont('Cascadia Code', self.text_size)
         self.disp_text = self.font.render(self.text, True, self.text_color)
+        self.onclick = onclick
 
     def draw(self, surface):
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
@@ -125,12 +127,14 @@ class TextBox:
         pygame.draw.rect(surface, self.border_color, self.rect, round(min(self.width, self.height)/25))
         surface.blit(self.disp_text, (self.rect[0], self.rect[1]))
         
-        
+    def mouse_over(self):
+        return self.rect.collidepoint(pygame.mouse.get_pos())
+    
     def tick(self):
         done = False
         for event in self.events:
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if self.rect.collidepoint(pygame.mouse.get_pos()):
+                if self.mouse_over():
                     self.active = not self.active
                 else:
                     self.active = False
@@ -148,6 +152,8 @@ class TextBox:
                     else:
                         self.text += event.unicode
                         self.disp_text = self.font.render(self.text, True, self.text_color)
+        if done and self.onclick:
+            self.onclick(self.ret_text)
         return done
 
 class Menu:
@@ -188,6 +194,9 @@ class Menu:
 
         for button in self.buttons:
             button.draw(surface)
+
+    def mouse_over(self):
+        pass # Consider self.rect.collidepoint(pygame.mouse.get_pos())
 
     def tick(self):
         # if self.enabled:
@@ -253,6 +262,7 @@ class Slider:
             
 
     def mouse_over(self):
+        # Consider self.rect.collidepoint(pygame.mouse.get_pos())
         x, y = pygame.mouse.get_pos()
         if x >= self.x and x <= self.x+self.width and self.enabled:
             return y >= self.y and y <= self.y+self.height
