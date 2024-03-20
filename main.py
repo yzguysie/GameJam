@@ -341,8 +341,6 @@ class Player(Object):
            
         if self.on_surface():
             self.yspeed = 0
-        #self.do_collision()
-
 
     def apply_friction(self, flat_friction, multiplicative_friction):
         if self.xspeed > flat_friction*gamespeed:
@@ -354,6 +352,7 @@ class Player(Object):
 
         else:
             self.xspeed = 0
+
     def apply_gravity(self):
         if self.mini:
             self.yspeed += self.gravity*gamespeed
@@ -507,21 +506,23 @@ class Level:
         self.hazards = []
         self.portals = []
         self.objects_editing = []
-        self.placeable = []
+        self.placeables = {}
+        self.placeables_real = {}
 
 
     def load(self, data):
         #try:
             important_list = [Object, Obstacle, Hazard, BluePortal, YellowPortal, NormalPortal, MiniPortal, EndLevelPortal, BumpPad, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal]
-
-            data = data.split("/")
+            data = data.split("#")
+            placeable_data = data[0].split("/")
+            obj_data = data[1].split("/")
 
             self.obstacles = []
             self.hazards = []
             self.portals = []
             
             
-            for object in data:
+            for object in obj_data:
                 object_data = object.split("@")
                 object_id = int(object_data[0])
 
@@ -548,10 +549,16 @@ class Level:
             config.write(configfile)
     
     def get_data(self):
+        data = ""
+        for object in self.placeables:
+            data += str(object)
+            data += "/"
+        data += "#"
         object_data = []
         for object in self.all_objects():
             object_data.append(repr(object))
-        return "/".join(object_data)
+        data += "/".join(object_data)
+        return data
     
     def all_objects(self):
         for o in self.obstacles:
@@ -822,7 +829,7 @@ def make_new_object(id_, pos):
 
 def save_level_good(level_name):
     config = ConfigParser()
-    saved_level_data = save_level()
+    saved_level_data = game.level.get_data()
     config[level_name] = {}
     config[level_name]['level'] = saved_level_data
     with open(f'resources/levels/{level_name}'+'.ini', 'w') as configfile:
@@ -1062,7 +1069,6 @@ class Game:
 
                 elif event.key == pygame.K_RETURN:
                     pass
-                    #save_all_levels(num_levels)
 
                 if self.display.is_edit_mode():
 
@@ -1081,6 +1087,16 @@ class Game:
                     elif event.key == pygame.K_d:
                         for obj in objects_editing:
                             obj.x += grid_width
+
+                    elif event.key == pygame.K_j:
+                        if selected in game.level.placeables.keys():
+                            game.level.placeables[selected] += 1
+                        else:
+                            game.level.placeables[selected] = 1
+
+                    elif event.key == pygame.K_k:
+                        if selected in game.level.placeables.keys():
+                            game.level.placeables[selected] -= 1
                 
 
                     elif event.key == pygame.K_0:
