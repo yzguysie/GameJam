@@ -520,6 +520,14 @@ class Level:
             self.obstacles = []
             self.hazards = []
             self.portals = []
+
+            for o in placeable_data:
+                o = o.split(":")
+                if len(o) == 2:
+                    obj = (int(o[0]))
+                    num = int(o[1])
+                    self.placeables[obj] = num
+                    self.placeables_real[obj] = num
             
             
             for object in obj_data:
@@ -551,8 +559,11 @@ class Level:
     def get_data(self):
         data = ""
         for object in self.placeables:
-            data += str(object)
-            data += "/"
+            if self.placeables[object] > 0:
+                data += str(object)
+                data += ":"
+                data += str(self.placeables[object])
+                data += "/"
         data += "#"
         object_data = []
         for object in self.all_objects():
@@ -568,6 +579,15 @@ class Level:
         for p in self.portals:
             yield p
 
+def close_edit_menu():
+    game.display.edit_menu_close_button.enabled = False
+    game.display.edit_menu.enabled = False
+    game.display.edit_menu_open_button.enabled = True
+
+def open_edit_menu():
+    game.display.edit_menu_close_button.enabled = True
+    game.display.edit_menu.enabled = True
+    game.display.edit_menu_open_button.enabled = False
 
 def save_level():
 
@@ -654,7 +674,7 @@ portal_default_image = pygame.image.load("resources/images/portal.png")
 yellow_portal_default_image = pygame.image.load("resources/images/yellow_portal.png")
 
 
-game_default_music = pygame.mixer.Sound("resources/sounds/ez.mp3")
+#game_default_music = pygame.mixer.Sound("resources/sounds/ez.mp3")
 jump_sound = pygame.mixer.Sound("resources/sounds/jump.wav")
 mini_jump_sound = pygame.mixer.Sound("resources/sounds/mini_jump.wav")
 
@@ -688,9 +708,10 @@ def mouse_over_anything():
             return True
     
     for menu in game.display.menus:
-        for button in menu.buttons:
-            if button.mouse_over():
-                return True
+        if menu.enabled:
+            for button in menu.buttons:
+                if button.mouse_over():
+                    return True
             
     for box in game.display.text_boxes:
         if box.mouse_over():
@@ -780,21 +801,25 @@ def make_new_object(id_, pos):
         game.level.hazards.append(new_spike)
 
     if id_ == ObjectType.YELLOW_PORTAL:
+        x, y = get_grid_pos(pos, grid_width/2, grid_height)
         new_portal = YellowPortal(camera, x, y, grid_width/2, grid_height*2)
         new_portal.make_sprite(yellow_portal_default_image)
         game.level.portals.append(new_portal)
 
     if id_ == ObjectType.BLUE_PORTAL:
+        x, y = get_grid_pos(pos, grid_width/2, grid_height)
         new_portal = BluePortal(camera, x, y, grid_width/2, grid_height*2)
         new_portal.make_sprite(portal_default_image)
         game.level.portals.append(new_portal)
 
     if id_ == ObjectType.NORMAL_PORTAL:
+        x, y = get_grid_pos(pos, grid_width/2, grid_height)
         new_portal = NormalPortal(camera, x, y, grid_width/2, grid_height*2)
         new_portal.make_sprite(portal_default_image)
         game.level.portals.append(new_portal)
 
     if id_ == ObjectType.MINI_PORTAL:
+        x, y = get_grid_pos(pos, grid_width/2, grid_height)
         new_portal = MiniPortal(camera, x, y, grid_width/2, grid_height*2)
         new_portal.make_sprite(portal_default_image)
         game.level.portals.append(new_portal)
@@ -814,11 +839,13 @@ def make_new_object(id_, pos):
         game.level.obstacles.append(new_obstacle)
 
     if id_ == ObjectType.JUMP_PAD:
+        x, y = get_grid_pos(pos, grid_width, grid_height/2)
         new_portal = BumpPad(camera, x, y, grid_width, grid_height/2)
         new_portal.make_sprite(portal_default_image)
         game.level.portals.append(new_portal)
 
     if id_ == ObjectType.END_PORTAL:
+        x, y = get_grid_pos(pos, grid_width/2, grid_height)
         new_portal = EndLevelPortal(camera, x, y, grid_width/2, grid_height*2, 6)
         new_portal.make_sprite(portal_default_image)
         game.level.portals.append(new_portal)
@@ -926,7 +953,12 @@ class Display:
             self.end_portal_button = ui.Button((button_width+5)*2, (button_height+5)*4, button_width, button_height, "End portal", partial(set_selected_object, ObjectType.END_PORTAL), portal_default_image)
             self.jump_pad_button = ui.Button((button_width+5)*3, (button_height+5)*4, button_width, button_height, "Jump pad", partial(set_selected_object, ObjectType.JUMP_PAD), portal_default_image)
             self.select_button = ui.Button(0, self.screen_height-button_height*5, button_width, button_height, "select", partial(set_selected_object, ObjectType.SELECT))
-            self.object_menu = ui.Menu(button_width, self.screen_height-button_height*5, self.screen_width/2-button_width*2, button_height*5, 15, 3)
+            self.edit_menu = ui.Menu(button_width, self.screen_height-button_height*5, self.screen_width/2-button_width*2, button_height*5, 15, 3)
+            self.edit_menu_close_button = ui.Button(self.screen_width/2-button_width-button_height, self.screen_height-button_height*5, button_height, button_height, "X", close_edit_menu)
+            self.edit_menu_open_button = ui.Button((self.screen_width/2-button_height)/2, self.screen_height-button_height, button_height, button_height, "^", open_edit_menu)
+            self.edit_menu_open_button.enabled = False
+            self.object_menu = ui.Menu(button_width+self.screen_width/2-button_width*2, self.screen_height-button_height*5, self.screen_width/2-button_width*2, button_height*5, 15, 3)
+            self.object_menu.enabled = False
             slots = 16
 
             for i in range(1,slots+1):
@@ -961,19 +993,21 @@ class Display:
                 # self.buttons.append(self.end_portal_button)
                 # self.buttons.append(self.slab_button)
                 # self.buttons.append(self.jump_pad_button)
-                self.object_menu.add_button(self.block_button)
-                self.object_menu.add_button(self.slab_button)
-                self.object_menu.add_button(self.mini_block_button)
-                self.object_menu.add_button(self.spike_button)
-                self.object_menu.add_button(self.blue_portal_button)
-                self.object_menu.add_button(self.yellow_portal_button)
-                self.object_menu.add_button(self.normal_portal_button)
-                self.object_menu.add_button(self.mini_portal_button)
-                self.object_menu.add_button(self.jump_pad_button)
-                self.object_menu.add_button(self.end_portal_button)
-                self.menus.append(self.object_menu)
+                self.edit_menu.add_button(self.block_button)
+                self.edit_menu.add_button(self.slab_button)
+                self.edit_menu.add_button(self.mini_block_button)
+                self.edit_menu.add_button(self.spike_button)
+                self.edit_menu.add_button(self.blue_portal_button)
+                self.edit_menu.add_button(self.yellow_portal_button)
+                self.edit_menu.add_button(self.normal_portal_button)
+                self.edit_menu.add_button(self.mini_portal_button)
+                self.edit_menu.add_button(self.jump_pad_button)
+                self.edit_menu.add_button(self.end_portal_button)
+                self.menus.append(self.edit_menu)
+                self.buttons.append(self.edit_menu_close_button)
+                self.buttons.append(self.edit_menu_open_button)
                 self.sliders.append(self.fps_slider)
-            
+            self.menus.append(self.object_menu)
 
     def reload_all_sprites(self):
         for player in players:
@@ -1089,14 +1123,14 @@ class Game:
                             obj.x += grid_width
 
                     elif event.key == pygame.K_j:
-                        if selected in game.level.placeables.keys():
-                            game.level.placeables[selected] += 1
+                        if selected.value in game.level.placeables.keys():
+                            game.level.placeables[selected.value] += 1
                         else:
-                            game.level.placeables[selected] = 1
+                            game.level.placeables[selected.value] = 1
 
                     elif event.key == pygame.K_k:
-                        if selected in game.level.placeables.keys():
-                            game.level.placeables[selected] -= 1
+                        if selected.value in game.level.placeables.keys():
+                            game.level.placeables[selected.value] -= 1
                 
 
                     elif event.key == pygame.K_0:
@@ -1135,8 +1169,19 @@ class Game:
                             obj.rotation %= 360
 
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if self.display.is_edit_mode() and not mouse_over_anything():
-                    make_new_object(selected, mouse_pos)
+                if not mouse_over_anything():
+                    if self.display.is_edit_mode():
+                        make_new_object(selected, mouse_pos)
+                    elif selected.value in self.level.placeables_real and self.level.placeables_real[selected.value] > 0:
+                        make_new_object(selected, mouse_pos)
+                        self.level.placeables_real[selected.value] -= 1
+                    else:
+                        print(selected.value in self.level.placeables_real)
+                        print(self.level.placeables_real[selected.value] > 0)
+                    
+                       
+
+
 
     def play(self):
         global camera
@@ -1271,11 +1316,19 @@ class Game:
 
             important_list2 = [obstacle_default_image, obstacle_default_image, hazard_default_image, portal_default_image, yellow_portal_default_image, portal_default_image, portal_default_image, portal_default_image, portal_default_image, portal_default_image, portal_default_image]
 
-            for object in level.all_objects():
+            for object in self.level.all_objects():
                 object.make_sprite(important_list2[object.id])
                 
             for player in players:
                 player.die()
+
+            if len(self.level.placeables_real) > 0:
+                self.display.object_menu.enabled = True
+                for object in self.level.placeables_real:
+                    self.display.object_menu.add_button(ui.Button(0, 0, 0, 0, None, partial(set_selected_object, ObjectType(object)), important_list2[object]))
+
+            else:
+                self.display.object_menu.enabled = False
 
         #except:
         #    print(f"Failed to load level {level_name}")
@@ -1283,8 +1336,9 @@ class Game:
         self.level = level
 
 game = Game()
-game.load_level(f'slot_{level_num}')
 game.display.reload_buttons()
+game.load_level(f'slot_{level_num}')
+
 load_new_level = False
 # game.load_default()
 game.play()
